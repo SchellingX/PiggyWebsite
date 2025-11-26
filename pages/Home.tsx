@@ -19,9 +19,9 @@ const Home: React.FC = () => {
       {/* Quick Apps Grid */}
       <section>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800">Quick Access</h2>
+          <h2 className="text-2xl font-bold text-slate-800">快速访问</h2>
           <Link to="/apps" className="text-rose-500 hover:text-rose-600 text-sm font-medium flex items-center">
-            View All <ArrowRight size={16} className="ml-1" />
+            查看全部 <ArrowRight size={16} className="ml-1" />
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -44,9 +44,9 @@ const Home: React.FC = () => {
       {/* Recent Updates */}
       <section>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800">Latest Stories</h2>
+          <h2 className="text-2xl font-bold text-slate-800">最新故事</h2>
           <Link to="/blog" className="text-rose-500 hover:text-rose-600 text-sm font-medium flex items-center">
-            Read Blog <ArrowRight size={16} className="ml-1" />
+            阅读博客 <ArrowRight size={16} className="ml-1" />
           </Link>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
@@ -63,7 +63,7 @@ const Home: React.FC = () => {
                 <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-1">{blog.title}</h3>
                 <p className="text-slate-500 text-sm mb-4 flex-1 line-clamp-2">{blog.excerpt}</p>
                 <Link to={`/blog`} className="text-rose-500 font-medium text-sm hover:underline mt-auto inline-block">
-                  Read more
+                  阅读更多
                 </Link>
               </div>
             </div>
@@ -74,16 +74,16 @@ const Home: React.FC = () => {
       {/* Notice Board */}
       <section className="bg-amber-50 rounded-2xl p-6 md:p-8 border border-amber-100">
         <h2 className="text-xl font-bold text-amber-800 mb-4 flex items-center">
-          <Clock className="mr-2" /> Family Notice Board
+          <Clock className="mr-2" /> 家庭公告栏
         </h2>
         <ul className="space-y-3">
           <li className="flex items-start gap-3 text-amber-900/80">
             <span className="w-2 h-2 mt-2 rounded-full bg-amber-400 shrink-0"></span>
-            <span>Remember to water the plants on Tuesday! - Mummy Pig</span>
+            <span>记得周二给植物浇水！ - 猪妈妈</span>
           </li>
           <li className="flex items-start gap-3 text-amber-900/80">
             <span className="w-2 h-2 mt-2 rounded-full bg-amber-400 shrink-0"></span>
-            <span>Grandpa Pig is coming for dinner this Friday.</span>
+            <span>猪爷爷这周五要来吃晚饭。</span>
           </li>
         </ul>
       </section>

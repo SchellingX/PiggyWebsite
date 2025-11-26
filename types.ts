@@ -29,7 +29,7 @@ export interface Photo {
   id: string;
   url: string;
   caption: string;
-  category: 'Event' | 'Daily' | 'Travel' | 'Funny';
+  category: string;
   date: string;
   takenBy: string;
 }
@@ -41,6 +41,12 @@ export interface AppItem {
   category: string;
   description: string;
   url?: string;
+}
+
+export interface Reminder {
+  id: string;
+  text: string;
+  completed: boolean;
 }
 
 export type SearchSource = 'local' | 'ai';

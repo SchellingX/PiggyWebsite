@@ -8,13 +8,13 @@ export const askGemini = async (query: string): Promise<string> => {
       model: 'gemini-2.5-flash',
       contents: query,
       config: {
-        systemInstruction: "You are a warm, helpful, and polite AI assistant for the 'Pig Family' website. You should answer questions simply, suitable for a family environment. If asked about the family, assume typical loving family dynamics (Daddy Pig, Mummy Pig, Peppa, George). Keep answers concise.",
+        systemInstruction: "你是一个热情、乐于助人且有礼貌的AI助手，服务于“佩奇家庭”网站。你应该用简体中文回答问题，语言风格通俗易懂，适合家庭环境。如果被问及家庭成员，请假设典型的充满爱意的家庭动态（猪爸爸、猪妈妈、佩奇、乔治）。回答要简洁明了。",
       }
     });
     
-    return response.text || "I couldn't think of an answer right now.";
+    return response.text || "我现在想不出答案。";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Sorry, I'm having trouble connecting to the brain right now.";
+    return "抱歉，我现在连接大脑有点困难。";
   }
 };

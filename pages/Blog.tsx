@@ -8,6 +8,9 @@ const Blog: React.FC = () => {
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   
+  // Permissions
+  const canCreate = user.role === 'admin' || user.role === 'member';
+  
   // New Blog State
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
@@ -21,7 +24,7 @@ const Blog: React.FC = () => {
       excerpt: newContent.substring(0, 100) + '...',
       author: user,
       date: new Date().toISOString(),
-      tags: ['Family'],
+      tags: ['家庭'],
       likes: 0,
       image: `https://picsum.photos/id/${Math.floor(Math.random() * 50)}/800/400`,
       comments: []
@@ -36,15 +39,17 @@ const Blog: React.FC = () => {
     <div className="max-w-4xl mx-auto pb-12">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Family Blog</h1>
-          <p className="text-slate-500 mt-1">Sharing our little moments</p>
+          <h1 className="text-3xl font-bold text-slate-800">家庭博客</h1>
+          <p className="text-slate-500 mt-1">分享生活点滴</p>
         </div>
-        <button
-          onClick={() => setIsCreating(true)}
-          className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-rose-200 transition-all active:scale-95"
-        >
-          <Plus size={18} /> New Post
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setIsCreating(true)}
+            className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-rose-200 transition-all active:scale-95"
+          >
+            <Plus size={18} /> 新建文章
+          </button>
+        )}
       </div>
 
       {/* Main Content Area */}
@@ -85,16 +90,16 @@ const Blog: React.FC = () => {
                 onClick={() => likeBlog(selectedBlog.id)}
                 className="flex items-center gap-2 text-rose-500 font-medium hover:bg-rose-50 px-4 py-2 rounded-full transition-colors"
               >
-                <Heart size={20} className={selectedBlog.likes > 0 ? "fill-current" : ""} /> {selectedBlog.likes} Likes
+                <Heart size={20} className={selectedBlog.likes > 0 ? "fill-current" : ""} /> {selectedBlog.likes} 点赞
               </button>
               <div className="flex items-center gap-2 text-slate-500">
-                <MessageSquare size={20} /> {selectedBlog.comments.length} Comments
+                <MessageSquare size={20} /> {selectedBlog.comments.length} 评论
               </div>
             </div>
 
             {/* Comments Section (Static for demo) */}
             <div className="mt-8 bg-slate-50 rounded-2xl p-6">
-              <h3 className="font-bold text-slate-700 mb-4">Comments</h3>
+              <h3 className="font-bold text-slate-700 mb-4">评论</h3>
               {selectedBlog.comments.length > 0 ? (
                 <div className="space-y-4">
                   {selectedBlog.comments.map(comment => (
@@ -113,7 +118,7 @@ const Blog: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-400 text-sm italic">No comments yet. Be the first to say something!</p>
+                <p className="text-slate-400 text-sm italic">暂无评论。快来抢沙发吧！</p>
               )}
             </div>
           </div>
@@ -158,32 +163,32 @@ const Blog: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-800">Write New Story</h2>
+              <h2 className="text-xl font-bold text-slate-800">写新故事</h2>
               <button onClick={() => setIsCreating(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={24} />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">标题</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  placeholder="What's the story about?"
+                  placeholder="这个故事关于什么？"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Content</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">内容</label>
                 <textarea
                   required
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   rows={6}
                   className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  placeholder="Share the details..."
+                  placeholder="分享细节..."
                 />
               </div>
               <div className="flex justify-end gap-3 pt-4">
@@ -192,13 +197,13 @@ const Blog: React.FC = () => {
                   onClick={() => setIsCreating(false)}
                   className="px-5 py-2 rounded-full text-slate-600 font-medium hover:bg-slate-100 transition-colors"
                 >
-                  Cancel
+                  取消
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 rounded-full bg-rose-500 text-white font-medium hover:bg-rose-600 shadow-md shadow-rose-200 transition-all"
                 >
-                  Publish
+                  发布
                 </button>
               </div>
             </form>

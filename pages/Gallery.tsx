@@ -4,16 +4,19 @@ import { Photo } from '../types';
 import { Filter, Upload, X, ChevronLeft, ChevronRight, Download, Heart } from 'lucide-react';
 
 const Gallery: React.FC = () => {
-  const { photos, addPhoto } = useData();
-  const [filter, setFilter] = useState<string>('All');
+  const { photos, addPhoto, user } = useData();
+  const [filter, setFilter] = useState<string>('全部');
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Permissions
+  const canUpload = user.role === 'admin' || user.role === 'member';
+
   // Categories
-  const categories = ['All', 'Event', 'Daily', 'Travel', 'Funny'];
+  const categories = ['全部', '活动', '日常', '旅行', '有趣'];
   
   // Filter Logic
-  const filteredPhotos = filter === 'All' 
+  const filteredPhotos = filter === '全部' 
     ? photos 
     : photos.filter(p => p.category === filter);
 
@@ -24,10 +27,10 @@ const Gallery: React.FC = () => {
     const newPhoto: Photo = {
       id: Date.now().toString(),
       url: `https://picsum.photos/id/${Math.floor(Math.random() * 100)}/800/800`,
-      caption: 'New Memory',
-      category: 'Daily',
+      caption: '新回忆',
+      category: '日常',
       date: new Date().toISOString().split('T')[0],
-      takenBy: 'User'
+      takenBy: user.name
     };
     addPhoto(newPhoto);
     setIsUploading(false);
@@ -52,16 +55,18 @@ const Gallery: React.FC = () => {
     <div className="pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Family Album</h1>
-          <p className="text-slate-500 mt-1">Freezing time, one click at a time.</p>
+          <h1 className="text-3xl font-bold text-slate-800">家庭相册</h1>
+          <p className="text-slate-500 mt-1">定格时间，留住每一刻。</p>
         </div>
         <div className="flex items-center gap-3">
+          {canUpload && (
             <button 
                 onClick={() => setIsUploading(true)}
                 className="bg-slate-800 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:bg-slate-700 transition-all shadow-lg shadow-slate-200"
             >
-                <Upload size={18} /> Upload
+                <Upload size={18} /> 上传
             </button>
+          )}
         </div>
       </div>
 
@@ -124,14 +129,14 @@ const Gallery: React.FC = () => {
                   />
                   <div className="mt-4 text-center text-white">
                       <h2 className="text-xl font-bold">{filteredPhotos[selectedPhotoIndex].caption}</h2>
-                      <p className="opacity-70 text-sm mt-1">Taken by {filteredPhotos[selectedPhotoIndex].takenBy} on {filteredPhotos[selectedPhotoIndex].date}</p>
+                      <p className="opacity-70 text-sm mt-1">由 {filteredPhotos[selectedPhotoIndex].takenBy} 拍摄于 {filteredPhotos[selectedPhotoIndex].date}</p>
                       
                       <div className="flex justify-center gap-4 mt-4">
                           <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm backdrop-blur-md transition-colors">
-                              <Heart size={16} /> Favorite
+                              <Heart size={16} /> 收藏
                           </button>
                           <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm backdrop-blur-md transition-colors">
-                              <Download size={16} /> Download
+                              <Download size={16} /> 下载
                           </button>
                       </div>
                   </div>
@@ -150,15 +155,15 @@ const Gallery: React.FC = () => {
       {isUploading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <div className="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">Add New Photo</h3>
-                <p className="text-slate-500 mb-6 text-sm">Select photos from your device to add to the family album.</p>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">添加新照片</h3>
+                <p className="text-slate-500 mb-6 text-sm">从您的设备选择照片添加到家庭相册。</p>
                 <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 mb-6 hover:bg-slate-50 transition-colors cursor-pointer">
                     <Upload className="mx-auto text-rose-400 mb-2" size={32} />
-                    <span className="text-slate-400 text-sm">Click to browse</span>
+                    <span className="text-slate-400 text-sm">点击浏览</span>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={() => setIsUploading(false)} className="flex-1 py-2 rounded-full text-slate-600 hover:bg-slate-100 font-medium transition-colors">Cancel</button>
-                    <button onClick={handleUpload} className="flex-1 py-2 rounded-full bg-rose-500 text-white font-medium hover:bg-rose-600 shadow-md shadow-rose-200 transition-all">Upload</button>
+                    <button onClick={() => setIsUploading(false)} className="flex-1 py-2 rounded-full text-slate-600 hover:bg-slate-100 font-medium transition-colors">取消</button>
+                    <button onClick={handleUpload} className="flex-1 py-2 rounded-full bg-rose-500 text-white font-medium hover:bg-rose-600 shadow-md shadow-rose-200 transition-all">上传</button>
                 </div>
             </div>
         </div>

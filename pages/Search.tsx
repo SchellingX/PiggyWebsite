@@ -26,15 +26,15 @@ const Search: React.FC = () => {
     
     const blogResults = blogs
         .filter(b => b.title.toLowerCase().includes(q) || b.content.toLowerCase().includes(q))
-        .map(b => ({ type: 'Blog', title: b.title, desc: b.excerpt, link: '/blog' }));
+        .map(b => ({ type: '博客', title: b.title, desc: b.excerpt, link: '/blog' }));
         
     const photoResults = photos
         .filter(p => p.caption.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
-        .map(p => ({ type: 'Photo', title: p.caption, desc: `Taken by ${p.takenBy}`, link: '/gallery' }));
+        .map(p => ({ type: '相册', title: p.caption, desc: `拍摄者：${p.takenBy}`, link: '/gallery' }));
         
     const appResults = apps
         .filter(a => a.name.toLowerCase().includes(q))
-        .map(a => ({ type: 'App', title: a.name, desc: a.description, link: '/apps' }));
+        .map(a => ({ type: '应用', title: a.name, desc: a.description, link: '/apps' }));
 
     setLocalResults([...blogResults, ...photoResults, ...appResults]);
   };
@@ -50,7 +50,7 @@ const Search: React.FC = () => {
         const result = await askGemini(query);
         setAiResponse(result);
     } catch (err) {
-        setAiResponse("Sorry, I got confused.");
+        setAiResponse("抱歉，我有点糊涂了。");
     } finally {
         setIsLoading(false);
     }
@@ -65,8 +65,8 @@ const Search: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto pb-12">
         <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Smart Search</h1>
-            <p className="text-slate-500">Find anything in the house, or ask the AI brain.</p>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">智能搜索</h1>
+            <p className="text-slate-500">查找家里的任何东西，或者询问 AI 大脑。</p>
         </div>
 
         {/* Tab Switcher */}
@@ -78,7 +78,7 @@ const Search: React.FC = () => {
                         activeTab === 'local' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                     }`}
                 >
-                    Site Search
+                    站内搜索
                 </button>
                 <button
                     onClick={() => setActiveTab('ai')}
@@ -86,7 +86,7 @@ const Search: React.FC = () => {
                         activeTab === 'ai' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                     }`}
                 >
-                    <Sparkles size={16} /> AI Assistant
+                    <Sparkles size={16} /> AI 助手
                 </button>
             </div>
         </div>
@@ -100,7 +100,7 @@ const Search: React.FC = () => {
                         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input
                             type="text"
-                            placeholder="Search photos, blogs, apps..."
+                            placeholder="搜索照片、博客、应用..."
                             value={query}
                             onChange={(e) => handleLocalSearch(e.target.value)}
                             className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-rose-500/20 text-slate-800 font-medium text-lg placeholder:font-normal transition-all"
@@ -113,10 +113,10 @@ const Search: React.FC = () => {
                             localResults.map((res, idx) => (
                                 <div key={idx} className="flex items-start gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 group">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                                        res.type === 'Blog' ? 'bg-blue-50 text-blue-500' :
-                                        res.type === 'Photo' ? 'bg-purple-50 text-purple-500' : 'bg-green-50 text-green-500'
+                                        res.type === '博客' ? 'bg-blue-50 text-blue-500' :
+                                        res.type === '相册' ? 'bg-purple-50 text-purple-500' : 'bg-green-50 text-green-500'
                                     }`}>
-                                        {res.type === 'Blog' ? <ArrowRight size={18}/> : res.type === 'Photo' ? <Sparkles size={18}/> : <Check size={18}/>}
+                                        {res.type === '博客' ? <ArrowRight size={18}/> : res.type === '相册' ? <Sparkles size={18}/> : <Check size={18}/>}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex justify-between">
@@ -129,11 +129,11 @@ const Search: React.FC = () => {
                             ))
                         ) : query ? (
                             <div className="text-center py-10 text-slate-400">
-                                <p>No matching results found in the house.</p>
+                                <p>在家里没找到匹配的结果。</p>
                             </div>
                         ) : (
                             <div className="text-center py-10 text-slate-400">
-                                <p>Start typing to search...</p>
+                                <p>开始输入进行搜索...</p>
                             </div>
                         )}
                     </div>
@@ -145,7 +145,7 @@ const Search: React.FC = () => {
                         <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500" size={20} />
                         <input
                             type="text"
-                            placeholder="Ask Gemini AI (e.g., 'How do I make pancakes?')"
+                            placeholder="询问 Gemini AI (例如：'怎么做煎饼？')"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             className="w-full pl-12 pr-12 py-4 rounded-2xl bg-rose-50/50 border-none focus:ring-2 focus:ring-rose-500/20 text-slate-800 font-medium text-lg placeholder:text-rose-300 transition-all"
@@ -164,13 +164,13 @@ const Search: React.FC = () => {
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
                                 <div className="w-6 h-6 border-2 border-rose-400 border-t-transparent rounded-full animate-spin"></div>
-                                <span className="text-sm font-medium">Thinking...</span>
+                                <span className="text-sm font-medium">思考中...</span>
                             </div>
                         ) : aiResponse ? (
                             <div className="animate-fade-in">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-2 text-rose-600 font-semibold text-sm">
-                                        <Sparkles size={14} /> AI Answer
+                                        <Sparkles size={14} /> AI 回答
                                     </div>
                                     <button onClick={copyToClipboard} className="text-slate-400 hover:text-slate-600 transition-colors">
                                         {isCopied ? <Check size={16} /> : <Copy size={16} />}
@@ -183,7 +183,7 @@ const Search: React.FC = () => {
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-slate-400">
                                 <Sparkles size={32} className="mb-3 opacity-20" />
-                                <p className="text-sm">Ask me anything about cooking, facts, or ideas!</p>
+                                <p className="text-sm">问我任何关于烹饪、事实或创意的问题！</p>
                             </div>
                         )}
                     </div>
