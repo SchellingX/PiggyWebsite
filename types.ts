@@ -1,8 +1,10 @@
+
 export interface User {
   id: string;
   name: string;
   avatar: string;
   role: 'admin' | 'member' | 'guest';
+  password?: string;
 }
 
 export interface BlogPost {

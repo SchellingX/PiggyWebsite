@@ -1,9 +1,10 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { BlogPost, Photo, AppItem, User, Reminder, HomeSection } from '../types';
-import { MOCK_BLOGS, MOCK_PHOTOS, MOCK_APPS, CURRENT_USER, ALL_USERS, MOCK_REMINDERS } from '../constants';
+import { MOCK_BLOGS, MOCK_PHOTOS, MOCK_APPS, ALL_USERS, MOCK_REMINDERS } from '../constants';
 
 interface DataContextType {
-  user: User;
+  user: User | null;
   allUsers: User[];
   blogs: BlogPost[];
   photos: Photo[];
@@ -11,8 +12,12 @@ interface DataContextType {
   reminders: Reminder[];
   homeSections: HomeSection[];
   isHomeEditing: boolean;
-  switchUser: (userId: string) => void;
-  addUser: (name: string, avatar: string) => void;
+  login: (name: string, password: string) => boolean;
+  logout: () => void;
+  resetUserPassword: (name: string, newPass: string) => boolean;
+  changePassword: (newPass: string) => void;
+  updateUserAvatar: (newAvatar: string) => void;
+  addUser: (name: string, avatar: string, password: string) => void;
   addBlog: (post: BlogPost) => void;
   updateBlog: (post: BlogPost) => void;
   deleteBlog: (id: string) => void;
@@ -36,7 +41,7 @@ const DEFAULT_SECTIONS: HomeSection[] = [
 ];
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User>(CURRENT_USER);
+  const [user, setUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>(ALL_USERS);
   const [blogs, setBlogs] = useState<BlogPost[]>(MOCK_BLOGS);
   const [photos, setPhotos] = useState<Photo[]>(MOCK_PHOTOS);
@@ -47,21 +52,55 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [homeSections, setHomeSections] = useState<HomeSection[]>(DEFAULT_SECTIONS);
   const [isHomeEditing, setIsHomeEditing] = useState(false);
 
-  const switchUser = (userId: string) => {
-    const newUser = allUsers.find(u => u.id === userId);
-    if (newUser) {
-      setUser(newUser);
+  const login = (name: string, password: string) => {
+    const foundUser = allUsers.find(u => u.name === name && u.password === password);
+    if (foundUser) {
+      setUser(foundUser);
+      return true;
     }
+    return false;
   };
 
-  const addUser = (name: string, avatar: string) => {
+  const logout = () => {
+    setUser(null);
+    setIsHomeEditing(false);
+  };
+
+  const addUser = (name: string, avatar: string, password: string) => {
     const newUser: User = {
       id: `u_${Date.now()}`,
       name,
       avatar,
-      role: 'member',
+      role: 'member', // Default new user role
+      password,
     };
     setAllUsers([...allUsers, newUser]);
+  };
+
+  const changePassword = (newPass: string) => {
+    if (user) {
+        const updatedUser = { ...user, password: newPass };
+        setUser(updatedUser);
+        setAllUsers(allUsers.map(u => u.id === user.id ? updatedUser : u));
+    }
+  };
+
+  const resetUserPassword = (name: string, newPass: string) => {
+      const targetUser = allUsers.find(u => u.name === name);
+      if (targetUser) {
+          const updatedUser = { ...targetUser, password: newPass };
+          setAllUsers(allUsers.map(u => u.id === targetUser.id ? updatedUser : u));
+          return true;
+      }
+      return false;
+  };
+
+  const updateUserAvatar = (newAvatar: string) => {
+      if (user) {
+          const updatedUser = { ...user, avatar: newAvatar };
+          setUser(updatedUser);
+          setAllUsers(allUsers.map(u => u.id === user.id ? updatedUser : u));
+      }
   };
 
   const addBlog = (post: BlogPost) => {
@@ -118,7 +157,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       reminders,
       homeSections,
       isHomeEditing,
-      switchUser,
+      login,
+      logout,
+      resetUserPassword,
+      changePassword,
+      updateUserAvatar,
       addUser,
       addBlog, 
       updateBlog,

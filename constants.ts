@@ -1,3 +1,4 @@
+
 import { AppItem, BlogPost, Photo, User, Reminder } from './types';
 
 export const ALL_USERS: User[] = [
@@ -6,30 +7,35 @@ export const ALL_USERS: User[] = [
     name: '猪管',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
     role: 'admin',
+    password: '123',
   },
   {
     id: 'u_dad',
     name: '爸比',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dad',
     role: 'member',
+    password: '123',
   },
   {
     id: 'u_mom',
     name: '妈咪',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mom',
     role: 'member',
+    password: '123',
   },
   {
     id: 'u_grandma',
     name: '婆婆',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Granny',
     role: 'member',
+    password: '123',
   },
   {
     id: 'u_fan',
     name: '猪迷',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fan',
     role: 'guest',
+    password: '123',
   }
 ];
 
