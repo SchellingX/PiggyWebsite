@@ -2,21 +2,33 @@ import { AppItem, BlogPost, Photo, User, Reminder } from './types';
 
 export const ALL_USERS: User[] = [
   {
-    id: 'u1',
-    name: '猪爸爸',
-    avatar: 'https://picsum.photos/id/64/100/100',
+    id: 'u_admin',
+    name: '猪管',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
     role: 'admin',
   },
   {
-    id: 'u2',
-    name: '佩奇',
-    avatar: 'https://picsum.photos/id/65/100/100',
+    id: 'u_dad',
+    name: '爸比',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dad',
     role: 'member',
   },
   {
-    id: 'u3',
-    name: '克洛伊堂姐',
-    avatar: 'https://picsum.photos/id/66/100/100',
+    id: 'u_mom',
+    name: '妈咪',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mom',
+    role: 'member',
+  },
+  {
+    id: 'u_grandma',
+    name: '婆婆',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Granny',
+    role: 'member',
+  },
+  {
+    id: 'u_fan',
+    name: '猪迷',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fan',
     role: 'guest',
   }
 ];
@@ -29,13 +41,13 @@ export const MOCK_BLOGS: BlogPost[] = [
     title: '周日山丘野餐',
     excerpt: '我们度过了一段美好的时光，吃三明治，玩飞盘。',
     content: '天气非常完美。佩奇很喜欢巧克力蛋糕。乔治在草丛里发现了一个恐龙玩具。这对全家人来说都是美好的一天。',
-    author: ALL_USERS[0],
+    author: ALL_USERS[1], // 爸比
     date: new Date(Date.now() - 86400000 * 2).toISOString(),
     tags: ['家庭', '野餐', '美食'],
     likes: 12,
     image: 'https://picsum.photos/id/28/800/400',
     comments: [
-      { id: 'c1', author: '猪妈妈', text: '蛋糕真好吃！', date: new Date().toISOString() }
+      { id: 'c1', author: '妈咪', text: '蛋糕真好吃！', date: new Date().toISOString() }
     ]
   },
   {
@@ -43,7 +55,7 @@ export const MOCK_BLOGS: BlogPost[] = [
     title: '乔治的恐龙收藏',
     excerpt: '这是对他新收藏品的概览。',
     content: '乔治又有了一个新的霸王龙。它非常绿，非常吓人。吼！',
-    author: { ...ALL_USERS[0], name: '佩奇' }, // Keeping Peppa as author name but using User object structure
+    author: ALL_USERS[2], // 妈咪
     date: new Date(Date.now() - 86400000 * 5).toISOString(),
     tags: ['玩具', '乔治'],
     likes: 8,
@@ -108,4 +120,5 @@ export const MOCK_REMINDERS: Reminder[] = [
   { id: 'r1', text: '去超市买牛奶', completed: false },
   { id: 'r2', text: '给金鱼喂食', completed: true },
   { id: 'r3', text: '归还图书馆的书', completed: false },
+  { id: 'r4', text: '帮乔治修恐龙', completed: false },
 ];

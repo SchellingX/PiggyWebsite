@@ -58,3 +58,10 @@ export interface SearchResult {
   description: string;
   link: string;
 }
+
+export interface HomeSection {
+  id: string;
+  type: 'carousel' | 'apps' | 'blogs' | 'notices';
+  visible: boolean;
+  title: string;
+}
