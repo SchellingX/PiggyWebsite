@@ -1,55 +1,93 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { BlogPost } from '../types';
-import { MessageSquare, Heart, Plus, X, Calendar, User, Tag, Image as ImageIcon, Trash2, Edit } from 'lucide-react';
+import { MessageSquare, Heart, Plus, X, Calendar, User, Tag, Image as ImageIcon, Trash2, Edit, Save, Upload } from 'lucide-react';
 
 const Blog: React.FC = () => {
   const { blogs, addBlog, updateBlog, deleteBlog, likeBlog, user } = useData();
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(false);
   
-  // New/Edit Blog State
+  // Editor State
   const [blogId, setBlogId] = useState<string>('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState<string>('');
+  const [draftStatus, setDraftStatus] = useState<string>('');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentImageInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-save Draft key
-  const DRAFT_KEY = `blog_draft_${user.id}`;
+  // Generate dynamic draft key based on mode and user
+  const getDraftKey = () => {
+      const modeSuffix = isEditingMode && blogId ? `edit_${blogId}` : 'new';
+      return `blog_draft_${user.id}_${modeSuffix}`;
+  };
 
-  // Load Draft on Init
+  // Load Draft
   useEffect(() => {
-    if (isCreating && !isEditingMode) {
-      const savedDraft = localStorage.getItem(DRAFT_KEY);
+    if (isModalOpen) {
+      const key = getDraftKey();
+      const savedDraft = localStorage.getItem(key);
       if (savedDraft) {
         try {
-          const { title: dTitle, content: dContent, coverImage: dImage } = JSON.parse(savedDraft);
-          setTitle(dTitle || '');
-          setContent(dContent || '');
-          setCoverImage(dImage || '');
+          const { title: dTitle, content: dContent, coverImage: dImage, timestamp } = JSON.parse(savedDraft);
+          // Only load if fields are empty (to avoid overwriting if we just opened edit mode with existing data)
+          // However, for 'new' mode, we always load. For 'edit', we might want to ask or check timestamp.
+          // For simplicity: If it's 'new' mode, load it. If 'edit', only load if the draft is newer? 
+          // Let's stick to simple: For New mode, auto-load. For Edit, only load if we strictly want to resume.
+          // Current logic: Just load it if it exists, but for Edit mode, we usually initialize from the blog prop first.
+          
+          if (!isEditingMode) {
+              setTitle(dTitle || '');
+              setContent(dContent || '');
+              setCoverImage(dImage || '');
+              setDraftStatus(`已恢复上次草稿 (${new Date(timestamp).toLocaleTimeString()})`);
+          } else {
+             // For edit mode, we silently check if there is a draft different from original? 
+             // Let's just update the state if the draft exists and is valid
+             if (dTitle || dContent) {
+                 setTitle(dTitle);
+                 setContent(dContent);
+                 if (dImage) setCoverImage(dImage);
+                 setDraftStatus(`已恢复未保存的修改 (${new Date(timestamp).toLocaleTimeString()})`);
+             }
+          }
         } catch (e) {
           console.error("Failed to load draft", e);
         }
-      } else {
-          // Random default image if new
+      } else if (!isEditingMode) {
+          // Default random image for new posts if no draft
           setCoverImage(`https://picsum.photos/id/${Math.floor(Math.random() * 50)}/800/400`);
       }
     }
-  }, [isCreating, isEditingMode, DRAFT_KEY]);
+  }, [isModalOpen, isEditingMode, blogId, user.id]);
 
-  // Save Draft logic
+  // Save Draft (Debounced)
   useEffect(() => {
-    if (isCreating && !isEditingMode) {
-      const timer = setTimeout(() => {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, content, coverImage }));
-      }, 1000); // Debounce 1s
-      return () => clearTimeout(timer);
-    }
-  }, [title, content, coverImage, isCreating, isEditingMode, DRAFT_KEY]);
+    if (!isModalOpen) return;
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const key = getDraftKey();
+    setDraftStatus('正在保存草稿...');
+    
+    const timer = setTimeout(() => {
+      const draftData = {
+          title,
+          content,
+          coverImage,
+          timestamp: Date.now()
+      };
+      localStorage.setItem(key, JSON.stringify(draftData));
+      setDraftStatus(`草稿已保存 ${new Date().toLocaleTimeString()}`);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [title, content, coverImage, isModalOpen, isEditingMode, blogId, user.id]);
+
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -60,29 +98,42 @@ const Blog: React.FC = () => {
     }
   };
 
+  const handleContentImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              const base64 = reader.result as string;
+              // Append markdown image syntax to content
+              // Using a newline to ensure it's on a new block
+              const imageMarkdown = `\n![插图](${base64})\n`;
+              setContent(prev => prev + imageMarkdown);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
   const handleCreateOrUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isEditingMode && blogId) {
-       // Update existing
        const original = blogs.find(b => b.id === blogId);
        if (original) {
            const updatedPost: BlogPost = {
                ...original,
                title,
                content,
-               excerpt: content.substring(0, 100) + '...',
+               excerpt: content.substring(0, 100).replace(/!\[.*?\]\(.*?\)/g, '[图片]') + '...',
                image: coverImage || original.image
            };
            updateBlog(updatedPost);
        }
     } else {
-        // Create new
         const newPost: BlogPost = {
           id: Date.now().toString(),
           title,
           content,
-          excerpt: content.substring(0, 100) + '...',
+          excerpt: content.substring(0, 100).replace(/!\[.*?\]\(.*?\)/g, '[图片]') + '...',
           author: user,
           date: new Date().toISOString(),
           tags: ['家庭'],
@@ -91,10 +142,10 @@ const Blog: React.FC = () => {
           comments: []
         };
         addBlog(newPost);
-        // Clear draft
-        localStorage.removeItem(DRAFT_KEY);
     }
 
+    // Clear draft after successful save
+    localStorage.removeItem(getDraftKey());
     closeModal();
   };
 
@@ -104,16 +155,27 @@ const Blog: React.FC = () => {
       setContent(blog.content);
       setCoverImage(blog.image || '');
       setIsEditingMode(true);
-      setIsCreating(true);
+      setIsModalOpen(true);
+      // Note: Draft loading effect will handle checking for existing edit drafts
+  };
+
+  const openNewModal = () => {
+      setBlogId('');
+      setTitle('');
+      setContent('');
+      setCoverImage('');
+      setIsEditingMode(false);
+      setIsModalOpen(true);
   };
 
   const closeModal = () => {
-      setIsCreating(false);
+      setIsModalOpen(false);
       setIsEditingMode(false);
       setTitle('');
       setContent('');
       setCoverImage('');
       setBlogId('');
+      setDraftStatus('');
   };
 
   const handleDelete = (id: string) => {
@@ -127,6 +189,26 @@ const Blog: React.FC = () => {
       return user.role === 'admin' || user.id === blog.author.id;
   };
 
+  // Custom parser to render text mixed with images
+  const renderContent = (text: string) => {
+      // Split by markdown image syntax: ![alt](url)
+      const parts = text.split(/(!\[.*?\]\(.*?\))/g);
+      
+      return parts.map((part, index) => {
+          const imageMatch = part.match(/!\[(.*?)\]\((.*?)\)/);
+          if (imageMatch) {
+              return (
+                  <div key={index} className="my-6 rounded-2xl overflow-hidden shadow-sm">
+                      <img src={imageMatch[2]} alt={imageMatch[1] || 'Blog Image'} className="w-full h-auto" />
+                      {imageMatch[1] && <p className="text-center text-sm text-slate-400 mt-2">{imageMatch[1]}</p>}
+                  </div>
+              );
+          }
+          // Render regular text, preserving line breaks
+          return <span key={index} className="whitespace-pre-wrap">{part}</span>;
+      });
+  };
+
   return (
     <div className="max-w-4xl mx-auto pb-12">
       <div className="flex justify-between items-center mb-8">
@@ -134,12 +216,14 @@ const Blog: React.FC = () => {
           <h1 className="text-3xl font-bold text-slate-800">家庭博客</h1>
           <p className="text-slate-500 mt-1">分享生活点滴</p>
         </div>
-        <button
-          onClick={() => setIsCreating(true)}
-          className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-rose-200 transition-all active:scale-95"
-        >
-          <Plus size={18} /> 新建文章
-        </button>
+        {(user.role === 'admin' || user.role === 'member') && (
+            <button
+            onClick={openNewModal}
+            className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-rose-200 transition-all active:scale-95"
+            >
+            <Plus size={18} /> 新建文章
+            </button>
+        )}
       </div>
 
       {/* Main Content Area */}
@@ -184,8 +268,8 @@ const Blog: React.FC = () => {
             </div>
           </div>
           <div className="p-8">
-            <div className="prose prose-slate max-w-none mb-8">
-              <p className="text-lg leading-relaxed text-slate-700 whitespace-pre-wrap">{selectedBlog.content}</p>
+            <div className="prose prose-slate max-w-none mb-8 text-lg leading-relaxed text-slate-700">
+              {renderContent(selectedBlog.content)}
             </div>
             
             <div className="flex items-center gap-2 mb-8">
@@ -208,7 +292,7 @@ const Blog: React.FC = () => {
               </div>
             </div>
 
-            {/* Comments Section (Static for demo) */}
+            {/* Comments Section */}
             <div className="mt-8 bg-slate-50 rounded-2xl p-6">
               <h3 className="font-bold text-slate-700 mb-4">评论</h3>
               {selectedBlog.comments.length > 0 ? (
@@ -270,76 +354,102 @@ const Blog: React.FC = () => {
       )}
 
       {/* Create/Edit Modal */}
-      {isCreating && (
+      {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="flex justify-between items-center mb-6 shrink-0">
               <h2 className="text-xl font-bold text-slate-800">{isEditingMode ? '编辑文章' : '写新故事'}</h2>
               <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">
                 <X size={24} />
               </button>
             </div>
             
-            {!isEditingMode && (
-                <div className="mb-4 p-3 bg-amber-50 text-amber-700 rounded-xl text-sm flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                    草稿会自动保存
+            {draftStatus && (
+                <div className="mb-4 px-3 py-2 bg-amber-50 text-amber-700 rounded-xl text-xs flex items-center gap-2 shrink-0 transition-all">
+                    <Save size={14} className="animate-pulse" />
+                    {draftStatus}
                 </div>
             )}
 
-            <form onSubmit={handleCreateOrUpdate} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">封面图片</label>
-                <div 
-                    className="w-full h-40 bg-slate-100 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-rose-400 hover:bg-slate-50 transition-colors overflow-hidden relative group"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    {coverImage ? (
-                        <>
-                            <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="text-white font-medium flex items-center gap-2"><ImageIcon size={18}/> 更换图片</span>
+            <form onSubmit={handleCreateOrUpdate} className="space-y-4 flex-1 flex flex-col">
+              <div className="grid md:grid-cols-3 gap-6">
+                  {/* Cover Image */}
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">封面图片</label>
+                    <div 
+                        className="w-full aspect-video md:aspect-square bg-slate-100 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-rose-400 hover:bg-slate-50 transition-colors overflow-hidden relative group"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {coverImage ? (
+                            <>
+                                <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-white font-medium flex items-center gap-2 text-xs"><ImageIcon size={16}/> 更换</span>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center text-slate-400 p-2">
+                                <ImageIcon className="mx-auto mb-2" size={24} />
+                                <span className="text-xs">上传封面</span>
                             </div>
-                        </>
-                    ) : (
-                        <div className="text-center text-slate-400">
-                            <ImageIcon className="mx-auto mb-2" size={24} />
-                            <span className="text-sm">点击上传封面</span>
-                        </div>
-                    )}
-                </div>
-                <input 
-                  type="file" 
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  className="hidden" 
-                  accept="image/*"
-                />
+                        )}
+                    </div>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      onChange={handleCoverImageUpload}
+                      className="hidden" 
+                      accept="image/*"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">标题</label>
+                        <input
+                        type="text"
+                        required
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                        placeholder="这个故事关于什么？"
+                        />
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col">
+                        <label className="flex items-center justify-between text-sm font-medium text-slate-700 mb-1">
+                            <span>正文内容</span>
+                            <button 
+                                type="button"
+                                onClick={() => contentImageInputRef.current?.click()}
+                                className="text-rose-500 text-xs flex items-center gap-1 hover:bg-rose-50 px-2 py-1 rounded-full transition-colors"
+                            >
+                                <Upload size={12} /> 插入文中图片
+                            </button>
+                            <input 
+                                type="file" 
+                                ref={contentImageInputRef}
+                                onChange={handleContentImageUpload}
+                                className="hidden" 
+                                accept="image/*"
+                            />
+                        </label>
+                        <textarea
+                            required
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            rows={8}
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all resize-none"
+                            placeholder="分享细节... 支持自动保存草稿"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1 text-right">
+                            * 插入的图片将以Markdown格式显示
+                        </p>
+                    </div>
+                  </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">标题</label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  placeholder="这个故事关于什么？"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">内容</label>
-                <textarea
-                  required
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={6}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
-                  placeholder="分享细节..."
-                />
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 shrink-0">
                 <button
                   type="button"
                   onClick={closeModal}
@@ -351,7 +461,7 @@ const Blog: React.FC = () => {
                   type="submit"
                   className="px-5 py-2 rounded-full bg-rose-500 text-white font-medium hover:bg-rose-600 shadow-md shadow-rose-200 transition-all"
                 >
-                  {isEditingMode ? '更新' : '发布'}
+                  {isEditingMode ? '更新发布' : '立即发布'}
                 </button>
               </div>
             </form>

@@ -35,6 +35,7 @@ export interface Photo {
   date: string;
   takenBy: string;
   source?: 'local' | 'mount';
+  mediaType?: 'image' | 'video';
 }
 
 export interface AppItem {

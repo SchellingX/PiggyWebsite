@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { BlogPost, Photo, AppItem, User, Reminder, HomeSection } from '../types';
 import { MOCK_BLOGS, MOCK_PHOTOS, MOCK_APPS, ALL_USERS, MOCK_REMINDERS } from '../constants';
 
@@ -12,6 +12,7 @@ interface DataContextType {
   reminders: Reminder[];
   homeSections: HomeSection[];
   isHomeEditing: boolean;
+  isLoading: boolean;
   login: (name: string, password: string) => boolean;
   logout: () => void;
   resetUserPassword: (name: string, newPass: string) => boolean;
@@ -41,16 +42,89 @@ const DEFAULT_SECTIONS: HomeSection[] = [
 ];
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Initial Mock State (used as fallback or initial value before fetch)
   const [user, setUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>(ALL_USERS);
   const [blogs, setBlogs] = useState<BlogPost[]>(MOCK_BLOGS);
   const [photos, setPhotos] = useState<Photo[]>(MOCK_PHOTOS);
   const [apps, setApps] = useState<AppItem[]>(MOCK_APPS);
   const [reminders, setReminders] = useState<Reminder[]>(MOCK_REMINDERS);
-  
-  // Home Page Layout State
   const [homeSections, setHomeSections] = useState<HomeSection[]>(DEFAULT_SECTIONS);
+  
   const [isHomeEditing, setIsHomeEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const isInitialized = useRef(false);
+
+  // --- Backend Persistence Logic ---
+
+  // 1. Load Data on Mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/data');
+        if (res.ok) {
+          const data = await res.json();
+          
+          if (data.initialized === false) {
+             // Server has no data, use MOCK data and trigger a save
+             console.log("Initialize server with mock data");
+             saveToBackend({ allUsers, blogs, photos, apps, reminders, homeSections });
+          } else {
+             // Server has data, update state
+             if (data.allUsers) setAllUsers(data.allUsers);
+             if (data.blogs) setBlogs(data.blogs);
+             if (data.photos) setPhotos(data.photos);
+             if (data.apps) setApps(data.apps);
+             if (data.reminders) setReminders(data.reminders);
+             if (data.homeSections) setHomeSections(data.homeSections);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch data from backend, using local mock.", error);
+      } finally {
+        setIsLoading(false);
+        isInitialized.current = true;
+      }
+    };
+
+    fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 2. Save Data Helper
+  const saveToBackend = async (data: any) => {
+      try {
+          await fetch('/api/data', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+          });
+      } catch (error) {
+          console.error("Failed to save data to backend", error);
+      }
+  };
+
+  // 3. Effect to auto-save whenever core data changes
+  // We use a ref to prevent saving during initial load phase
+  useEffect(() => {
+      if (!isInitialized.current) return;
+
+      const timer = setTimeout(() => {
+          saveToBackend({
+              allUsers,
+              blogs,
+              photos,
+              apps,
+              reminders,
+              homeSections
+          });
+      }, 1000); // Debounce save by 1 second
+
+      return () => clearTimeout(timer);
+  }, [allUsers, blogs, photos, apps, reminders, homeSections]);
+
+
+  // --- Actions ---
 
   const login = (name: string, password: string) => {
     const foundUser = allUsers.find(u => u.name === name && u.password === password);
@@ -71,17 +145,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       id: `u_${Date.now()}`,
       name,
       avatar,
-      role: 'member', // Default new user role
+      role: 'member', 
       password,
     };
-    setAllUsers([...allUsers, newUser]);
+    setAllUsers(prev => [...prev, newUser]);
   };
 
   const changePassword = (newPass: string) => {
     if (user) {
         const updatedUser = { ...user, password: newPass };
         setUser(updatedUser);
-        setAllUsers(allUsers.map(u => u.id === user.id ? updatedUser : u));
+        setAllUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
     }
   };
 
@@ -89,7 +163,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const targetUser = allUsers.find(u => u.name === name);
       if (targetUser) {
           const updatedUser = { ...targetUser, password: newPass };
-          setAllUsers(allUsers.map(u => u.id === targetUser.id ? updatedUser : u));
+          setAllUsers(prev => prev.map(u => u.id === targetUser.id ? updatedUser : u));
           return true;
       }
       return false;
@@ -99,44 +173,44 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (user) {
           const updatedUser = { ...user, avatar: newAvatar };
           setUser(updatedUser);
-          setAllUsers(allUsers.map(u => u.id === user.id ? updatedUser : u));
+          setAllUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
       }
   };
 
   const addBlog = (post: BlogPost) => {
-    setBlogs([post, ...blogs]);
+    setBlogs(prev => [post, ...prev]);
   };
 
   const updateBlog = (updatedPost: BlogPost) => {
-    setBlogs(blogs.map(b => b.id === updatedPost.id ? updatedPost : b));
+    setBlogs(prev => prev.map(b => b.id === updatedPost.id ? updatedPost : b));
   };
 
   const deleteBlog = (id: string) => {
-    setBlogs(blogs.filter(b => b.id !== id));
+    setBlogs(prev => prev.filter(b => b.id !== id));
   };
 
   const likeBlog = (id: string) => {
-    setBlogs(blogs.map(b => b.id === id ? { ...b, likes: b.likes + 1 } : b));
+    setBlogs(prev => prev.map(b => b.id === id ? { ...b, likes: b.likes + 1 } : b));
   };
 
   const addPhoto = (photo: Photo) => {
-    setPhotos([photo, ...photos]);
+    setPhotos(prev => [photo, ...prev]);
   };
 
   const addApp = (app: AppItem) => {
-    setApps([...apps, app]);
+    setApps(prev => [...prev, app]);
   };
 
   const addReminder = (text: string) => {
-    setReminders([...reminders, { id: Date.now().toString(), text, completed: false }]);
+    setReminders(prev => [...prev, { id: Date.now().toString(), text, completed: false }]);
   };
 
   const toggleReminder = (id: string) => {
-    setReminders(reminders.map(r => r.id === id ? { ...r, completed: !r.completed } : r));
+    setReminders(prev => prev.map(r => r.id === id ? { ...r, completed: !r.completed } : r));
   };
 
   const deleteReminder = (id: string) => {
-    setReminders(reminders.filter(r => r.id !== id));
+    setReminders(prev => prev.filter(r => r.id !== id));
   };
 
   const toggleHomeEditing = () => {
@@ -157,6 +231,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       reminders,
       homeSections,
       isHomeEditing,
+      isLoading,
       login,
       logout,
       resetUserPassword,
