@@ -1,9 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { BlogPost, Photo, AppItem, User, Reminder, HomeSection } from '../types';
 import { MOCK_BLOGS, MOCK_PHOTOS, MOCK_APPS, ALL_USERS, MOCK_REMINDERS } from '../constants';
 
+// --- 类型定义 ---
 interface DataContextType {
+  // 核心数据状态
   user: User | null;
   allUsers: User[];
   blogs: BlogPost[];
@@ -13,27 +14,38 @@ interface DataContextType {
   homeSections: HomeSection[];
   isHomeEditing: boolean;
   isLoading: boolean;
+  
+  // 认证操作
   login: (name: string, password: string) => boolean;
   logout: () => void;
   resetUserPassword: (name: string, newPass: string) => boolean;
   changePassword: (newPass: string) => void;
   updateUserAvatar: (newAvatar: string) => void;
   addUser: (name: string, avatar: string, password: string) => void;
+
+  // 博客操作
   addBlog: (post: BlogPost) => void;
   updateBlog: (post: BlogPost) => void;
   deleteBlog: (id: string) => void;
   likeBlog: (id: string) => void;
+
+  // 相册操作
   addPhoto: (photo: Photo) => void;
+
+  // 应用/提醒操作
   addApp: (app: AppItem) => void;
   addReminder: (text: string) => void;
   toggleReminder: (id: string) => void;
   deleteReminder: (id: string) => void;
+
+  // UI 操作
   toggleHomeEditing: () => void;
   updateHomeSections: (sections: HomeSection[]) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+// 主页布局默认配置
 const DEFAULT_SECTIONS: HomeSection[] = [
   { id: 'carousel', type: 'carousel', visible: true, title: '轮播图' },
   { id: 'apps', type: 'apps', visible: true, title: '快速应用' },
@@ -42,7 +54,8 @@ const DEFAULT_SECTIONS: HomeSection[] = [
 ];
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initial Mock State (used as fallback or initial value before fetch)
+  // --- 状态初始化 ---
+  // 初始使用 Mock 数据防止页面闪烁，随后会被后端数据覆盖
   const [user, setUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>(ALL_USERS);
   const [blogs, setBlogs] = useState<BlogPost[]>(MOCK_BLOGS);
@@ -53,11 +66,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const [isHomeEditing, setIsHomeEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 标记初始化是否完成，防止将初始状态误保存回服务器
   const isInitialized = useRef(false);
 
-  // --- Backend Persistence Logic ---
+  // --- 后端持久化逻辑 ---
 
-  // 1. Load Data on Mount
+  // 1. 组件挂载时加载数据
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -66,11 +81,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const data = await res.json();
           
           if (data.initialized === false) {
-             // Server has no data, use MOCK data and trigger a save
-             console.log("Initialize server with mock data");
+             // 情况 A: 服务器 db.json 不存在或为空
+             // 动作: 使用当前的 Mock 数据初始化服务器
+             console.log("服务器数据为空，正在初始化 Mock 数据...");
              saveToBackend({ allUsers, blogs, photos, apps, reminders, homeSections });
           } else {
-             // Server has data, update state
+             // 情况 B: 服务器有数据
+             // 动作: 使用服务器数据覆盖本地状态
              if (data.allUsers) setAllUsers(data.allUsers);
              if (data.blogs) setBlogs(data.blogs);
              if (data.photos) setPhotos(data.photos);
@@ -80,10 +97,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         }
       } catch (error) {
-        console.error("Failed to fetch data from backend, using local mock.", error);
+        console.error("无法从后端获取数据，使用本地 Mock。", error);
       } finally {
         setIsLoading(false);
-        isInitialized.current = true;
+        isInitialized.current = true; // 标记初始化完成
       }
     };
 
@@ -91,7 +108,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. Save Data Helper
+  // 2. 数据保存辅助函数
   const saveToBackend = async (data: any) => {
       try {
           await fetch('/api/data', {
@@ -100,15 +117,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               body: JSON.stringify(data)
           });
       } catch (error) {
-          console.error("Failed to save data to backend", error);
+          console.error("保存数据到后端失败", error);
       }
   };
 
-  // 3. Effect to auto-save whenever core data changes
-  // We use a ref to prevent saving during initial load phase
+  // 3. 自动保存副作用
+  // 监听所有核心数据变化，防抖保存到服务器
   useEffect(() => {
+      // 避免在初始化阶段保存
       if (!isInitialized.current) return;
 
+      // 延迟 1 秒保存，减少请求频率
       const timer = setTimeout(() => {
           saveToBackend({
               allUsers,
@@ -118,14 +137,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               reminders,
               homeSections
           });
-      }, 1000); // Debounce save by 1 second
+      }, 1000); 
 
       return () => clearTimeout(timer);
   }, [allUsers, blogs, photos, apps, reminders, homeSections]);
 
 
-  // --- Actions ---
+  // --- Action 具体实现 ---
 
+  // 登录逻辑
   const login = (name: string, password: string) => {
     const foundUser = allUsers.find(u => u.name === name && u.password === password);
     if (foundUser) {
@@ -137,15 +157,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setUser(null);
-    setIsHomeEditing(false);
+    setIsHomeEditing(false); // 登出时退出编辑模式
   };
 
+  // 添加新用户
   const addUser = (name: string, avatar: string, password: string) => {
     const newUser: User = {
       id: `u_${Date.now()}`,
       name,
       avatar,
-      role: 'member', 
+      role: 'member', // 默认为普通成员
       password,
     };
     setAllUsers(prev => [...prev, newUser]);
@@ -159,6 +180,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // 重置密码（用于找回密码功能）
   const resetUserPassword = (name: string, newPass: string) => {
       const targetUser = allUsers.find(u => u.name === name);
       if (targetUser) {
@@ -177,6 +199,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
   };
 
+  // 博客操作
   const addBlog = (post: BlogPost) => {
     setBlogs(prev => [post, ...prev]);
   };
@@ -193,10 +216,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setBlogs(prev => prev.map(b => b.id === id ? { ...b, likes: b.likes + 1 } : b));
   };
 
+  // 相册操作
   const addPhoto = (photo: Photo) => {
     setPhotos(prev => [photo, ...prev]);
   };
 
+  // 应用与提醒操作
   const addApp = (app: AppItem) => {
     setApps(prev => [...prev, app]);
   };
@@ -213,6 +238,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setReminders(prev => prev.filter(r => r.id !== id));
   };
 
+  // UI 布局操作
   const toggleHomeEditing = () => {
     setIsHomeEditing(!isHomeEditing);
   };

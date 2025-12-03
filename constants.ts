@@ -1,39 +1,46 @@
-
 import { AppItem, BlogPost, Photo, User, Reminder } from './types';
+
+// Use local assets from public/assets folder
+const ASSETS = {
+  avatarDefault: '/assets/avatar-default.png',
+  slide1: '/assets/slide1.jpg',
+  slide2: '/assets/slide2.jpg',
+  slide3: '/assets/slide3.jpg',
+};
 
 export const ALL_USERS: User[] = [
   {
     id: 'u_admin',
     name: '猪管',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
+    avatar: ASSETS.avatarDefault,
     role: 'admin',
     password: '123456',
   },
   {
     id: 'u_dad',
     name: '爸比',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dad',
+    avatar: ASSETS.avatarDefault,
     role: 'member',
     password: '123456',
   },
   {
     id: 'u_mom',
     name: '妈咪',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mom',
+    avatar: ASSETS.avatarDefault,
     role: 'member',
     password: '123456',
   },
   {
     id: 'u_grandma',
     name: '婆婆',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Granny',
+    avatar: ASSETS.avatarDefault,
     role: 'member',
     password: '123456',
   },
   {
     id: 'u_fan',
     name: '猪迷',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fan',
+    avatar: ASSETS.avatarDefault,
     role: 'guest',
     password: '123456',
   }
@@ -47,11 +54,11 @@ export const MOCK_BLOGS: BlogPost[] = [
     title: '周日山丘野餐',
     excerpt: '我们度过了一段美好的时光，吃三明治，玩飞盘。',
     content: '天气非常完美。圆圆很喜欢巧克力蛋糕。圆圆在草丛里发现了一个恐龙玩具。这对全家人来说都是美好的一天。',
-    author: ALL_USERS[1], // 爸比
+    author: ALL_USERS[1],
     date: new Date(Date.now() - 86400000 * 2).toISOString(),
     tags: ['家庭', '野餐', '美食'],
     likes: 12,
-    image: 'https://picsum.photos/id/28/800/400',
+    image: ASSETS.slide1,
     comments: [
       { id: 'c1', author: '妈咪', text: '蛋糕真好吃！', date: new Date().toISOString() }
     ]
@@ -61,11 +68,11 @@ export const MOCK_BLOGS: BlogPost[] = [
     title: '圆圆的小汽车收藏',
     excerpt: '这是对她新收藏品的概览。',
     content: '圆圆又有了一个新的小汽车。它非常大，速度非常快。咻！',
-    author: ALL_USERS[2], // 妈咪
+    author: ALL_USERS[2],
     date: new Date(Date.now() - 86400000 * 5).toISOString(),
     tags: ['玩具', '圆圆'],
     likes: 8,
-    image: 'https://picsum.photos/id/56/800/400',
+    image: ASSETS.slide2,
     comments: []
   }
 ];
@@ -73,7 +80,7 @@ export const MOCK_BLOGS: BlogPost[] = [
 export const MOCK_PHOTOS: Photo[] = [
   {
     id: 'p1',
-    url: 'https://picsum.photos/id/10/800/800',
+    url: ASSETS.slide1,
     caption: '森林日落',
     category: '旅行',
     date: '2023-10-01',
@@ -82,7 +89,7 @@ export const MOCK_PHOTOS: Photo[] = [
   },
   {
     id: 'p2',
-    url: 'https://picsum.photos/id/12/800/800',
+    url: ASSETS.slide2,
     caption: '海滩日！',
     category: '活动',
     date: '2023-09-15',
@@ -91,29 +98,11 @@ export const MOCK_PHOTOS: Photo[] = [
   },
   {
     id: 'p3',
-    url: 'https://picsum.photos/id/22/800/800',
+    url: ASSETS.slide3,
     caption: '独自散步',
     category: '日常',
     date: '2023-11-20',
     takenBy: '圆圆',
-    source: 'local'
-  },
-  {
-    id: 'p4',
-    url: 'https://picsum.photos/id/43/800/800',
-    caption: '踩泥坑',
-    category: '有趣',
-    date: '2023-12-05',
-    takenBy: '圆圆',
-    source: 'local'
-  },
-   {
-    id: 'p5',
-    url: 'https://picsum.photos/id/55/800/800',
-    caption: '花园',
-    category: '日常',
-    date: '2023-12-10',
-    takenBy: '猪奶奶',
     source: 'local'
   }
 ];

@@ -5,96 +5,143 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
-// Polyfill for __dirname in ES modules
+// --- 基础配置 ---
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 80;
 
-// Middleware
+// --- 中间件配置 ---
+
 app.use(cors());
-app.use(bodyParser.json({ limit: '50mb' })); // Increased limit for base64 images
+// 增加请求体大小限制，以支持 Base64 图片上传
+app.use(bodyParser.json({ limit: '50mb' })); 
 
-// Paths
+// --- 目录路径定义 ---
+
 const DATA_DIR = path.join(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
-const MEDIA_DIR = path.join(__dirname, 'media'); // Mount point for docker volume
-const DIST_DIR = path.join(__dirname, 'dist');
+const POSTS_DIR = path.join(DATA_DIR, 'posts'); // 存放生成的 Markdown 博客文件
+const DB_FILE = path.join(DATA_DIR, 'db.json'); // 核心 JSON 数据库
+const MEDIA_DIR = path.join(__dirname, 'media'); // 媒体文件挂载目录
+const DIST_DIR = path.join(__dirname, 'dist'); // 前端静态资源目录
 
-// Ensure data directory exists
+// --- 初始化检查 ---
+// 确保所有必要的目录都存在
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Ensure media directory exists (if not mounted)
+if (!fs.existsSync(POSTS_DIR)) {
+  fs.mkdirSync(POSTS_DIR, { recursive: true });
+}
+
 if (!fs.existsSync(MEDIA_DIR)) {
   fs.mkdirSync(MEDIA_DIR, { recursive: true });
 }
 
-// Helper to read DB
+// --- 辅助函数 ---
+
+// 读取数据库
 const readDb = () => {
-  if (!fs.existsSync(DB_FILE)) {
-    return null;
-  }
+  if (!fs.existsSync(DB_FILE)) return null;
   try {
-    const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data);
+    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
   } catch (err) {
-    console.error("Error reading DB:", err);
+    console.error("读取数据库失败:", err);
     return null;
   }
 };
 
-// Helper to write DB
+// 写入数据库
 const writeDb = (data) => {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    
+    // 如果包含博客数据，同时也将其保存为 Markdown 文件
+    if (data.blogs && Array.isArray(data.blogs)) {
+      saveBlogsAsMarkdown(data.blogs);
+    }
+    
     return true;
   } catch (err) {
-    console.error("Error writing DB:", err);
+    console.error("写入数据库失败:", err);
     return false;
   }
 };
 
-// --- API Routes ---
+// 文件名清洗，防止非法字符
+const sanitizeFilename = (name) => {
+  // 仅保留字母、数字、中文和下划线
+  return name.replace(/[^a-z0-9\u4e00-\u9fa5]/gi, '_').toLowerCase();
+};
 
-// Get Data
+// 将博客保存为 Markdown 文件
+const saveBlogsAsMarkdown = (blogs) => {
+  blogs.forEach(blog => {
+    try {
+      const filename = `${sanitizeFilename(blog.title)}_${blog.id}.md`;
+      const filePath = path.join(POSTS_DIR, filename);
+      
+      // 构建 Frontmatter 元数据
+      const fileContent = `---
+title: ${blog.title}
+author: ${blog.author.name}
+date: ${blog.date}
+tags: ${blog.tags.join(', ')}
+likes: ${blog.likes}
+---
+
+${blog.content}
+`;
+      fs.writeFileSync(filePath, fileContent, 'utf8');
+    } catch (e) {
+      console.error(`保存博客 Markdown 失败: ${blog.id}`, e);
+    }
+  });
+};
+
+// --- API 路由 ---
+
+// 获取全站数据
 app.get('/api/data', (req, res) => {
   const data = readDb();
   if (data) {
     res.json(data);
   } else {
-    // If no data exists, return empty object (frontend will handle initialization)
+    // 如果没有数据，返回标记让前端初始化
     res.json({ initialized: false });
   }
 });
 
-// Save Data
+// 保存全站数据
 app.post('/api/data', (req, res) => {
   const success = writeDb(req.body);
   if (success) {
     res.json({ success: true });
   } else {
-    res.status(500).json({ error: 'Failed to save data' });
+    res.status(500).json({ error: '保存数据失败' });
   }
 });
 
-// --- Static Files ---
+// --- 静态资源托管 ---
 
-// Serve Mounted Media Files
+// 挂载 /media 路径，用于访问 Docker 卷中的文件
 app.use('/media', express.static(MEDIA_DIR));
 
-// Serve Frontend Build
+// 托管 React 前端构建产物
 app.use(express.static(DIST_DIR));
 
-// SPA Fallback: Serve index.html for any unknown route
+// SPA 路由回退：所有未匹配的请求都返回 index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(DIST_DIR, 'index.html'));
 });
 
+// --- 启动服务器 ---
+
 app.listen(PORT, () => {
-  console.log(`🐷 Pig Family Hub Server running on port ${PORT}`);
-  console.log(`📁 Data Directory: ${DATA_DIR}`);
-  console.log(`📁 Media Mount: ${MEDIA_DIR}`);
+  console.log(`🐷 猪一家服务器运行在端口 ${PORT}`);
+  console.log(`📁 数据目录: ${DATA_DIR}`);
+  console.log(`📝 博客目录: ${POSTS_DIR}`);
 });

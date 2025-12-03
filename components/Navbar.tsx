@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Image, Grid, Search, Menu, X, ChevronDown, UserPlus, Settings, Layout, LogOut, Key, Camera } from 'lucide-react';
+import { Home, BookOpen, Image, Grid, Search, Menu, X, ChevronDown, UserPlus, Key, Camera, Layout, LogOut } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 const Navbar: React.FC = () => {
@@ -10,7 +9,7 @@ const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
-  // Modals
+  // 模态框状态管理
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isChangePassModalOpen, setIsChangePassModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
@@ -18,20 +17,21 @@ const Navbar: React.FC = () => {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
-  // New User State
+  // 新增用户表单状态
   const [newUserName, setNewUserName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserAvatar, setNewUserAvatar] = useState<string>('');
   
-  // Change Password State
+  // 修改密码表单状态
   const [newPasswordInput, setNewPasswordInput] = useState('');
   
-  // Change Avatar State
+  // 修改头像预览状态
   const [avatarUploadPreview, setAvatarUploadPreview] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // 监听滚动与点击外部事件
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -64,7 +64,9 @@ const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Handlers for Add User
+  // --- 处理函数 ---
+
+  // 新用户头像上传预览
   const handleNewUserAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -76,10 +78,11 @@ const Navbar: React.FC = () => {
     }
   };
 
+  // 创建新用户
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUserName && newUserPassword) {
-      const avatar = newUserAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${newUserName}`;
+      const avatar = newUserAvatar || `/assets/avatar-default.png`;
       addUser(newUserName, avatar, newUserPassword);
       setIsAddUserModalOpen(false);
       setNewUserName('');
@@ -89,7 +92,7 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // Handlers for Change Password
+  // 修改密码提交
   const handleChangePassword = (e: React.FormEvent) => {
       e.preventDefault();
       if (newPasswordInput) {
@@ -100,7 +103,7 @@ const Navbar: React.FC = () => {
       }
   };
 
-  // Handlers for Change Avatar
+  // 个人头像修改预览
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
@@ -112,6 +115,7 @@ const Navbar: React.FC = () => {
       }
   };
 
+  // 保存新头像
   const handleSaveAvatar = () => {
       if (avatarUploadPreview) {
           updateUserAvatar(avatarUploadPreview);
@@ -123,32 +127,32 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-serif ${
           isScrolled || isMobileMenuOpen
-            ? 'bg-white/70 backdrop-blur-md shadow-sm border-b border-white/20'
+            ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-amber-100'
             : 'bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-              <div className="w-8 h-8 bg-rose-400 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-inner">
-                猪
+          <div className="flex items-center justify-between h-20">
+            {/* Logo 区域 */}
+            <Link to="/" className="flex-shrink-0 flex items-center gap-3" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+                <img src="/assets/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
               </div>
-              <span className="font-semibold text-slate-800 tracking-tight text-lg">猪一家</span>
+              <span className="font-bold text-slate-800 tracking-tight text-xl">猪一家</span>
             </Link>
 
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-1">
+            {/* 桌面端菜单 */}
+            <div className="hidden md:flex items-center space-x-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.path}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                     isActive(link.path)
-                      ? 'bg-rose-500 text-white shadow-md shadow-rose-200'
-                      : 'text-slate-600 hover:bg-slate-100/50 hover:text-slate-900'
+                      ? 'bg-amber-400 text-white shadow-md shadow-amber-200'
+                      : 'text-slate-600 hover:bg-amber-50 hover:text-amber-800'
                   }`}
                 >
                   {link.icon}
@@ -157,15 +161,15 @@ const Navbar: React.FC = () => {
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Admin Page Adjustment Button */}
+            <div className="flex items-center gap-3">
+              {/* 管理员可见：页面布局调整按钮 */}
               {user.role === 'admin' && location.pathname === '/' && (
                 <button
                   onClick={toggleHomeEditing}
-                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${
                     isHomeEditing 
                       ? 'bg-slate-800 text-white border-slate-800' 
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-amber-300'
                   }`}
                 >
                   <Layout size={14} />
@@ -173,24 +177,24 @@ const Navbar: React.FC = () => {
                 </button>
               )}
 
-              {/* User Menu */}
+              {/* 用户下拉菜单 */}
               <div className="relative ml-2" ref={userMenuRef}>
                 <button 
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-white/50 border border-transparent hover:border-slate-100 transition-all"
+                  className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-white/80 border border-transparent hover:border-amber-100 transition-all bg-white/40"
                 >
-                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full border border-slate-200 object-cover bg-white" />
-                  <span className="text-sm font-medium text-slate-700 hidden sm:block">{user.name}</span>
+                  <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-sm" />
+                  <span className="text-sm font-bold text-slate-700 hidden sm:block">{user.name}</span>
                   <ChevronDown size={14} className="text-slate-400" />
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden animate-fade-in origin-top-right">
-                    <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
-                      <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">当前登录</p>
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-amber-50 overflow-hidden animate-fade-in origin-top-right">
+                    <div className="px-4 py-4 border-b border-slate-50 bg-amber-50/30">
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">当前登录</p>
                       <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider ${
-                        user.role === 'admin' ? 'bg-rose-100 text-rose-600' : 
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider mt-1 inline-block ${
+                        user.role === 'admin' ? 'bg-amber-100 text-amber-700' : 
                         user.role === 'member' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'
                       }`}>
                         {user.role === 'admin' ? '管理员' : user.role === 'member' ? '用户' : '访客'}
@@ -200,13 +204,13 @@ const Navbar: React.FC = () => {
                     <div className="p-1">
                         <button
                            onClick={() => { setIsAvatarModalOpen(true); setIsUserMenuOpen(false); }}
-                           className="w-full text-left px-3 py-2 rounded-xl text-sm flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
+                           className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
                         >
                             <Camera size={16} className="text-slate-400" /> 修改头像
                         </button>
                         <button
                            onClick={() => { setIsChangePassModalOpen(true); setIsUserMenuOpen(false); }}
-                           className="w-full text-left px-3 py-2 rounded-xl text-sm flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
+                           className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
                         >
                             <Key size={16} className="text-slate-400" /> 修改密码
                         </button>
@@ -218,7 +222,7 @@ const Navbar: React.FC = () => {
                           setIsAddUserModalOpen(true);
                           setIsUserMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-sm flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
+                        className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
                       >
                          <UserPlus size={16} className="text-slate-400" /> 添加账户
                       </button>
@@ -227,7 +231,7 @@ const Navbar: React.FC = () => {
                           logout();
                           setIsUserMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-sm flex items-center gap-3 text-red-500 hover:bg-red-50 transition-colors"
+                        className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-red-500 hover:bg-red-50 transition-colors"
                       >
                          <LogOut size={16} /> 退出登录
                       </button>
@@ -236,7 +240,7 @@ const Navbar: React.FC = () => {
                 )}
               </div>
 
-              {/* Mobile Menu Button */}
+              {/* 移动端菜单按钮 */}
               <div className="md:hidden ml-2">
                 <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -249,7 +253,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
+        {/* 移动端菜单下拉内容 */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-slate-100 absolute w-full shadow-xl">
             <div className="px-4 pt-2 pb-6 space-y-1">
@@ -258,9 +262,9 @@ const Navbar: React.FC = () => {
                   key={link.name}
                   to={link.path}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-4 py-3 rounded-xl text-base font-medium flex items-center gap-3 transition-colors ${
+                  className={`block px-4 py-3 rounded-xl text-base font-bold flex items-center gap-3 transition-colors ${
                     isActive(link.path)
-                      ? 'bg-rose-50 text-rose-600'
+                      ? 'bg-amber-50 text-amber-600'
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -270,7 +274,7 @@ const Navbar: React.FC = () => {
               ))}
               <button
                 onClick={() => { logout(); setIsMobileMenuOpen(false); }}
-                className="w-full text-left px-4 py-3 rounded-xl text-base font-medium flex items-center gap-3 text-red-500 hover:bg-red-50"
+                className="w-full text-left px-4 py-3 rounded-xl text-base font-bold flex items-center gap-3 text-red-500 hover:bg-red-50"
               >
                  <LogOut size={18} /> 退出登录
               </button>
@@ -279,9 +283,9 @@ const Navbar: React.FC = () => {
         )}
       </nav>
 
-      {/* Add User Modal */}
+      {/* --- 模态框组件 (添加用户、修改密码、修改头像) --- */}
       {isAddUserModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-serif">
           <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-slate-800">添加新家庭成员</h2>
@@ -292,7 +296,7 @@ const Navbar: React.FC = () => {
             <form onSubmit={handleCreateUser} className="space-y-4">
               <div className="flex flex-col items-center gap-4 mb-2">
                 <div 
-                  className="w-20 h-20 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-rose-400 transition-colors relative group"
+                  className="w-20 h-20 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-amber-400 transition-colors relative group"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {newUserAvatar ? (
@@ -312,34 +316,31 @@ const Navbar: React.FC = () => {
                   onChange={handleNewUserAvatarUpload}
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">昵称</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1">昵称</label>
                 <input
                   type="text"
                   required
                   value={newUserName}
                   onChange={(e) => setNewUserName(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                   placeholder="例如：黑土猪"
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">初始密码</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1">初始密码</label>
                 <input
                   type="text"
                   required
                   value={newUserPassword}
                   onChange={(e) => setNewUserPassword(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                   placeholder="例如：123456"
                 />
               </div>
-
               <button
                 type="submit"
-                className="w-full px-5 py-3 rounded-full bg-rose-500 text-white font-medium hover:bg-rose-600 shadow-md shadow-rose-200 transition-all flex items-center justify-center gap-2 mt-2"
+                className="w-full px-5 py-3 rounded-full bg-amber-500 text-white font-bold hover:bg-amber-600 shadow-md shadow-amber-200 transition-all flex items-center justify-center gap-2 mt-2"
               >
                 <UserPlus size={18} /> 创建用户
               </button>
@@ -348,9 +349,8 @@ const Navbar: React.FC = () => {
         </div>
       )}
 
-      {/* Change Password Modal */}
       {isChangePassModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-serif">
           <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-slate-800">修改密码</h2>
@@ -360,13 +360,13 @@ const Navbar: React.FC = () => {
             </div>
             <form onSubmit={handleChangePassword}>
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">新密码</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">新密码</label>
                     <input
                         type="text"
                         required
                         value={newPasswordInput}
                         onChange={(e) => setNewPasswordInput(e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                     />
                 </div>
                 <button type="submit" className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg">保存新密码</button>
@@ -375,9 +375,8 @@ const Navbar: React.FC = () => {
         </div>
       )}
 
-      {/* Change Avatar Modal */}
       {isAvatarModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-serif">
           <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl text-center">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-slate-800">修改头像</h2>
@@ -385,9 +384,8 @@ const Navbar: React.FC = () => {
                 <X size={24} />
               </button>
             </div>
-            
             <div 
-                className="w-32 h-32 mx-auto rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-rose-400 transition-colors relative group mb-6"
+                className="w-32 h-32 mx-auto rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-amber-400 transition-colors relative group mb-6"
                 onClick={() => avatarInputRef.current?.click()}
             >
                 {avatarUploadPreview || user.avatar ? (
@@ -406,11 +404,10 @@ const Navbar: React.FC = () => {
                 accept="image/*"
                 onChange={handleAvatarFileSelect}
             />
-            
             <button 
                 onClick={handleSaveAvatar} 
                 disabled={!avatarUploadPreview}
-                className="w-full py-3 bg-rose-500 text-white rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 保存头像
             </button>

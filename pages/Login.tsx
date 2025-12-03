@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Lock, User, HelpCircle, Check, ArrowRight, Heart } from 'lucide-react';
@@ -9,7 +8,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   
-  // Forgot Password State
+  // 找回密码相关的状态
   const [isForgotOpen, setIsForgotOpen] = useState(false);
   const [resetUsername, setResetUsername] = useState('');
   const [securityAnswer, setSecurityAnswer] = useState('');
@@ -18,6 +17,7 @@ const Login: React.FC = () => {
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
 
+  // --- 登录逻辑 ---
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -27,15 +27,18 @@ const Login: React.FC = () => {
     }
   };
 
+  // --- 访客快捷登录 ---
   const handleGuestLogin = () => {
       login('猪迷', '123456');
   };
 
+  // --- 安全问题验证逻辑 ---
   const handleCheckAnswer = (e: React.FormEvent) => {
       e.preventDefault();
       setResetError('');
       
       const normalizedAnswer = securityAnswer.trim();
+      // 简单的硬编码安全问题验证
       if (normalizedAnswer === '是' || normalizedAnswer === '是！' || normalizedAnswer.toLowerCase() === 'yes' || normalizedAnswer.toLowerCase() === 'yes!') {
           setStep('reset');
       } else {
@@ -43,6 +46,7 @@ const Login: React.FC = () => {
       }
   };
 
+  // --- 重置密码逻辑 ---
   const handleResetPassword = (e: React.FormEvent) => {
       e.preventDefault();
       setResetError('');
@@ -50,6 +54,7 @@ const Login: React.FC = () => {
       if (success) {
           setResetSuccess(true);
           setTimeout(() => {
+              // 重置成功后的状态清理
               setIsForgotOpen(false);
               setStep('question');
               setResetSuccess(false);
@@ -63,32 +68,30 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCFD] flex items-center justify-center px-4 font-sans relative overflow-hidden">
-        {/* Decorative Background */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-10 pointer-events-none">
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-300 rounded-full blur-[100px]" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-300 rounded-full blur-[100px]" />
-        </div>
+    <div className="min-h-screen flex items-center justify-center px-4 font-serif relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: "url('/assets/bg-login.jpg')" }}>
+        {/* 背景遮罩 */}
+        <div className="absolute inset-0 bg-amber-900/10 backdrop-blur-sm z-0"></div>
 
-        <div className="bg-white/80 backdrop-blur-xl w-full max-w-md p-8 rounded-3xl shadow-2xl border border-white/50 relative z-10 animate-fade-in">
+        <div className="bg-white/95 backdrop-blur-xl w-full max-w-md p-10 rounded-3xl shadow-2xl border border-white/60 relative z-10 animate-fade-in ring-1 ring-amber-100">
             <div className="text-center mb-10">
-                <div className="w-16 h-16 bg-rose-400 rounded-full flex items-center justify-center text-white font-bold text-3xl shadow-lg mx-auto mb-4">
-                    猪
+                <div className="w-20 h-20 bg-amber-400 rounded-full flex items-center justify-center shadow-lg mx-auto mb-5 border-4 border-white">
+                    <img src="/assets/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
                 </div>
-                <h1 className="text-2xl font-bold text-slate-800">欢迎回家</h1>
-                <p className="text-slate-500 text-sm mt-1">请输入猪猪ID进入猪窝</p>
+                <h1 className="text-3xl font-bold text-slate-800 tracking-tight">欢迎回家</h1>
+                <p className="text-amber-700/80 text-sm mt-2 font-medium">猪一家·温馨的线上基地</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 ml-1">用户名</label>
-                    <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <label className="text-sm font-bold text-slate-700 ml-1">用户名</label>
+                    <div className="relative group">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-amber-500 transition-colors" size={18} />
+                        {/* 高对比度输入框样式修正 */}
                         <input 
                             type="text" 
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition-all"
+                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border-2 border-slate-200 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-400 transition-all font-bold text-slate-800 placeholder:text-slate-400"
                             placeholder="你的名字"
                             required
                         />
@@ -96,14 +99,15 @@ const Login: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 ml-1">密码</label>
-                    <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <label className="text-sm font-bold text-slate-700 ml-1">密码</label>
+                    <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-amber-500 transition-colors" size={18} />
+                        {/* 高对比度输入框样式修正 */}
                         <input 
                             type="password" 
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500 transition-all"
+                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border-2 border-slate-200 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-400 transition-all font-bold text-slate-800 placeholder:text-slate-400"
                             placeholder="••••••"
                             required
                         />
@@ -111,23 +115,23 @@ const Login: React.FC = () => {
                 </div>
 
                 {error && (
-                    <div className="p-3 bg-red-50 text-red-500 text-sm rounded-xl text-center font-medium animate-pulse">
+                    <div className="p-3 bg-red-50 text-red-500 text-sm rounded-xl text-center font-bold animate-pulse border border-red-100">
                         {error}
                     </div>
                 )}
 
                 <button 
                     type="submit" 
-                    className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-300 hover:bg-slate-800 hover:scale-[1.01] active:scale-[0.99] transition-all"
                 >
-                    登录
+                    立即登录
                 </button>
             </form>
             
-            <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-4">
+            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-4">
                 <button
                     onClick={handleGuestLogin}
-                    className="w-full bg-rose-50 text-rose-500 font-bold py-3 rounded-2xl border border-rose-100 hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-amber-50 text-amber-600 font-bold py-3 rounded-2xl border border-amber-100 hover:bg-amber-100 transition-all flex items-center justify-center gap-2"
                 >
                     <Heart size={18} className="fill-current" />
                     我是猪迷 (访客入口)
@@ -135,7 +139,7 @@ const Login: React.FC = () => {
                 <div className="text-center">
                     <button 
                         onClick={() => setIsForgotOpen(true)}
-                        className="text-sm text-slate-400 hover:text-rose-500 font-medium transition-colors"
+                        className="text-sm text-slate-400 hover:text-amber-600 font-bold transition-colors"
                     >
                         忘记密码了？
                     </button>
@@ -143,10 +147,10 @@ const Login: React.FC = () => {
             </div>
         </div>
 
-        {/* Forgot Password Modal */}
+        {/* 忘记密码模态框 */}
         {isForgotOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-md animate-fade-in">
-                <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl relative overflow-hidden">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-fade-in">
+                <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl relative overflow-hidden ring-4 ring-amber-100">
                      {step === 'question' ? (
                         <form onSubmit={handleCheckAnswer}>
                             <div className="text-center mb-6">
@@ -159,12 +163,12 @@ const Login: React.FC = () => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">账号</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">账号</label>
                                     <input 
                                         type="text"
                                         value={resetUsername}
                                         onChange={(e) => setResetUsername(e.target.value)}
-                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:outline-none"
+                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-amber-400 focus:outline-none font-medium"
                                         placeholder="输入要找回的用户名"
                                         required
                                     />
@@ -175,12 +179,12 @@ const Login: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">答案</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">答案</label>
                                     <input 
                                         type="text"
                                         value={securityAnswer}
                                         onChange={(e) => setSecurityAnswer(e.target.value)}
-                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:outline-none"
+                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-amber-400 focus:outline-none font-medium"
                                         placeholder="请诚实回答..."
                                         required
                                     />
@@ -190,12 +194,13 @@ const Login: React.FC = () => {
                             {resetError && <p className="text-red-500 text-xs mt-3 text-center font-bold">{resetError}</p>}
 
                             <div className="flex gap-3 mt-6">
-                                <button type="button" onClick={() => setIsForgotOpen(false)} className="flex-1 py-2.5 rounded-xl text-slate-500 font-medium hover:bg-slate-50">取消</button>
+                                <button type="button" onClick={() => setIsForgotOpen(false)} className="flex-1 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-50 border border-slate-200">取消</button>
                                 <button type="submit" className="flex-1 py-2.5 rounded-xl bg-amber-500 text-white font-bold shadow-lg shadow-amber-200 hover:bg-amber-600">验证</button>
                             </div>
                         </form>
                      ) : (
                         <form onSubmit={handleResetPassword}>
+                            {/* 重置密码步骤的UI */}
                             <div className="text-center mb-6">
                                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-500 mx-auto mb-3">
                                     <Check size={24} />
@@ -206,12 +211,12 @@ const Login: React.FC = () => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">新密码</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">新密码</label>
                                     <input 
                                         type="text"
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
-                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-green-400 focus:outline-none"
+                                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-green-400 focus:outline-none font-medium"
                                         placeholder="输入新密码"
                                         required
                                     />
@@ -219,7 +224,7 @@ const Login: React.FC = () => {
                             </div>
 
                              {resetSuccess ? (
-                                <div className="mt-6 bg-green-50 text-green-600 p-3 rounded-xl text-center font-bold text-sm">
+                                <div className="mt-6 bg-green-50 text-green-600 p-3 rounded-xl text-center font-bold text-sm border border-green-100">
                                     密码修改成功！正在跳转...
                                 </div>
                              ) : (

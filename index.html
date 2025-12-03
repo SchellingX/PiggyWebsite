@@ -4,14 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>猪一家</title>
-    <!-- Tailwind CSS (Keeping CDN for simplicity as per original design, though bundling is possible) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Import Noto Serif SC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
+              // Override sans to use Serif as the default for the whole app as requested for clarity
+              sans: ['"Noto Serif SC"', 'serif', 'system-ui'],
+              serif: ['"Noto Serif SC"', 'serif'],
+            },
+            colors: {
+              // Pig Family Theme Colors (Yellow/Amber)
+              amber: {
+                50: '#fffbeb',
+                100: '#fef3c7',
+                200: '#fde68a',
+                300: '#fcd34d',
+                400: '#fbbf24',
+                500: '#f59e0b',
+                600: '#d97706',
+                700: '#b45309',
+                800: '#92400e',
+                900: '#78350f',
+              },
+              // Mapping 'rose' to 'amber' conceptually for easier migration if needed, 
+              // but we will explicitly use amber classes in code.
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out',
@@ -26,30 +46,13 @@
         },
       }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom scrollbar for Webkit */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
   <script type="importmap">
 {
