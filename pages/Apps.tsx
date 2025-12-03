@@ -69,7 +69,7 @@ const Apps: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">家庭应用</h1>
-          <p className="text-slate-500 mt-1">管理猪猪家庭的工具。</p>
+          <p className="text-slate-500 mt-1">管理猪一家的工具。</p>
         </div>
         <div className="flex items-center gap-3">
             <div className="relative">
@@ -191,7 +191,7 @@ const Apps: React.FC = () => {
                 ))}
                 {reminders.length === 0 && (
                     <div className="text-center text-slate-400 py-10">
-                        <p>没有待办事项！尽情玩耍吧！</p>
+                        <p>没有待办事项！尽情玩泥巴吧！</p>
                     </div>
                 )}
             </div>

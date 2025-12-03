@@ -7,35 +7,35 @@ export const ALL_USERS: User[] = [
     name: '猪管',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
     role: 'admin',
-    password: '123',
+    password: '123456',
   },
   {
     id: 'u_dad',
     name: '爸比',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dad',
     role: 'member',
-    password: '123',
+    password: '123456',
   },
   {
     id: 'u_mom',
     name: '妈咪',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mom',
     role: 'member',
-    password: '123',
+    password: '123456',
   },
   {
     id: 'u_grandma',
     name: '婆婆',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Granny',
     role: 'member',
-    password: '123',
+    password: '123456',
   },
   {
     id: 'u_fan',
     name: '猪迷',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fan',
     role: 'guest',
-    password: '123',
+    password: '123456',
   }
 ];
 
@@ -46,7 +46,7 @@ export const MOCK_BLOGS: BlogPost[] = [
     id: 'b1',
     title: '周日山丘野餐',
     excerpt: '我们度过了一段美好的时光，吃三明治，玩飞盘。',
-    content: '天气非常完美。佩奇很喜欢巧克力蛋糕。乔治在草丛里发现了一个恐龙玩具。这对全家人来说都是美好的一天。',
+    content: '天气非常完美。圆圆很喜欢巧克力蛋糕。圆圆在草丛里发现了一个恐龙玩具。这对全家人来说都是美好的一天。',
     author: ALL_USERS[1], // 爸比
     date: new Date(Date.now() - 86400000 * 2).toISOString(),
     tags: ['家庭', '野餐', '美食'],
@@ -58,12 +58,12 @@ export const MOCK_BLOGS: BlogPost[] = [
   },
   {
     id: 'b2',
-    title: '乔治的恐龙收藏',
-    excerpt: '这是对他新收藏品的概览。',
-    content: '乔治又有了一个新的霸王龙。它非常绿，非常吓人。吼！',
+    title: '圆圆的小汽车收藏',
+    excerpt: '这是对她新收藏品的概览。',
+    content: '圆圆又有了一个新的小汽车。它非常大，速度非常快。咻！',
     author: ALL_USERS[2], // 妈咪
     date: new Date(Date.now() - 86400000 * 5).toISOString(),
-    tags: ['玩具', '乔治'],
+    tags: ['玩具', '圆圆'],
     likes: 8,
     image: 'https://picsum.photos/id/56/800/400',
     comments: []
@@ -77,7 +77,8 @@ export const MOCK_PHOTOS: Photo[] = [
     caption: '森林日落',
     category: '旅行',
     date: '2023-10-01',
-    takenBy: '猪妈妈'
+    takenBy: '妈咪',
+    source: 'local'
   },
   {
     id: 'p2',
@@ -85,7 +86,8 @@ export const MOCK_PHOTOS: Photo[] = [
     caption: '海滩日！',
     category: '活动',
     date: '2023-09-15',
-    takenBy: '猪爸爸'
+    takenBy: '爸比',
+    source: 'local'
   },
   {
     id: 'p3',
@@ -93,7 +95,8 @@ export const MOCK_PHOTOS: Photo[] = [
     caption: '独自散步',
     category: '日常',
     date: '2023-11-20',
-    takenBy: '佩奇'
+    takenBy: '圆圆',
+    source: 'local'
   },
   {
     id: 'p4',
@@ -101,7 +104,8 @@ export const MOCK_PHOTOS: Photo[] = [
     caption: '踩泥坑',
     category: '有趣',
     date: '2023-12-05',
-    takenBy: '乔治'
+    takenBy: '圆圆',
+    source: 'local'
   },
    {
     id: 'p5',
@@ -109,7 +113,8 @@ export const MOCK_PHOTOS: Photo[] = [
     caption: '花园',
     category: '日常',
     date: '2023-12-10',
-    takenBy: '猪奶奶'
+    takenBy: '猪奶奶',
+    source: 'local'
   }
 ];
 
@@ -117,7 +122,7 @@ export const MOCK_APPS: AppItem[] = [
   { id: 'a1', name: '日历', icon: 'Calendar', category: '工具', description: '家庭活动和生日', url: '#' },
   { id: 'a2', name: '购物清单', icon: 'ShoppingCart', category: '工具', description: '需要买的杂货', url: '#' },
   { id: 'a3', name: '财务', icon: 'CreditCard', category: '财务', description: '存钱罐状态', url: '#' },
-  { id: 'a4', name: '食谱', icon: 'Utensils', category: '生活', description: '猪妈妈的秘制食谱', url: '#' },
+  { id: 'a4', name: '食谱', icon: 'Utensils', category: '生活', description: '妈咪的秘制食谱', url: '#' },
   { id: 'a5', name: '学校', icon: 'BookOpen', category: '教育', description: '游戏组课程表', url: '#' },
   { id: 'app-reminders', name: '提醒事项', icon: 'ListTodo', category: '工具', description: '待办事项清单', url: '#' },
 ];
@@ -126,5 +131,5 @@ export const MOCK_REMINDERS: Reminder[] = [
   { id: 'r1', text: '去超市买牛奶', completed: false },
   { id: 'r2', text: '给金鱼喂食', completed: true },
   { id: 'r3', text: '归还图书馆的书', completed: false },
-  { id: 'r4', text: '帮乔治修恐龙', completed: false },
+  { id: 'r4', text: '帮圆圆修小汽车', completed: false },
 ];

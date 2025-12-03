@@ -93,7 +93,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return true;
       }
       return false;
-  };
+    }
 
   const updateUserAvatar = (newAvatar: string) => {
       if (user) {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import { Lock, User, HelpCircle, Check, ArrowRight } from 'lucide-react';
+import { Lock, User, HelpCircle, Check, ArrowRight, Heart } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login, resetUserPassword } = useData();
@@ -25,6 +25,10 @@ const Login: React.FC = () => {
     if (!success) {
       setError('用户名或密码错误。');
     }
+  };
+
+  const handleGuestLogin = () => {
+      login('猪迷', '123456');
   };
 
   const handleCheckAnswer = (e: React.FormEvent) => {
@@ -72,7 +76,7 @@ const Login: React.FC = () => {
                     猪
                 </div>
                 <h1 className="text-2xl font-bold text-slate-800">欢迎回家</h1>
-                <p className="text-slate-500 text-sm mt-1">请输入账号密码进入猪窝</p>
+                <p className="text-slate-500 text-sm mt-1">请输入猪猪ID进入猪窝</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -119,14 +123,23 @@ const Login: React.FC = () => {
                     登录
                 </button>
             </form>
-
-            <div className="mt-8 text-center">
-                <button 
-                    onClick={() => setIsForgotOpen(true)}
-                    className="text-sm text-slate-400 hover:text-rose-500 font-medium transition-colors"
+            
+            <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-4">
+                <button
+                    onClick={handleGuestLogin}
+                    className="w-full bg-rose-50 text-rose-500 font-bold py-3 rounded-2xl border border-rose-100 hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
                 >
-                    忘记密码了？
+                    <Heart size={18} className="fill-current" />
+                    我是猪迷 (访客入口)
                 </button>
+                <div className="text-center">
+                    <button 
+                        onClick={() => setIsForgotOpen(true)}
+                        className="text-sm text-slate-400 hover:text-rose-500 font-medium transition-colors"
+                    >
+                        忘记密码了？
+                    </button>
+                </div>
             </div>
         </div>
 

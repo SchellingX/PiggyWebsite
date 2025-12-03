@@ -321,7 +321,7 @@ const Navbar: React.FC = () => {
                   value={newUserName}
                   onChange={(e) => setNewUserName(e.target.value)}
                   className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
-                  placeholder="例如：乔治"
+                  placeholder="例如：黑土猪"
                 />
               </div>
 

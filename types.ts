@@ -34,6 +34,7 @@ export interface Photo {
   category: string;
   date: string;
   takenBy: string;
+  source?: 'local' | 'mount';
 }
 
 export interface AppItem {
