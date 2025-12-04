@@ -19,18 +19,16 @@ const MainLayout: React.FC = () => {
         return <Login />;
     }
 
-    // Determine if we should show the global background or if the page handles its own (like Home)
-    // Actually, Home handles its own HERO section, but we still need a background for the rest of the page.
-    // The previous instruction was to have 'Home' handle it.
-    // Let's make the global background applicable everywhere, but Home will overlay its Hero on top.
+    // Dynamic background handling
+    // Home page has its own hero, so the global bg needs to be subtle there or covered.
     
     return (
         <div 
-          className="min-h-screen font-serif text-slate-900 flex flex-col selection:bg-amber-200 selection:text-amber-900 bg-cover bg-center bg-fixed bg-no-repeat"
+          className="min-h-screen font-serif text-slate-900 flex flex-col selection:bg-amber-200 selection:text-amber-900 bg-cover bg-center bg-fixed bg-no-repeat transition-all duration-500"
           style={{ backgroundImage: `url('${siteTheme.mainBg}')` }}
         >
-          {/* Global white overlay to ensure text readability, stronger on non-home pages */}
-          <div className={`absolute inset-0 bg-[#FDFCFD]/95 z-0 fixed ${location.pathname === '/' ? 'opacity-90' : 'opacity-95'}`} />
+          {/* Global overlay. Lighter on Home page to let the Hero shine, stronger on others for readability */}
+          <div className={`absolute inset-0 bg-[#FDFCFD] z-0 fixed transition-opacity duration-300 ${location.pathname === '/' ? 'opacity-80' : 'opacity-95'}`} />
           
           <div className="relative z-10 flex flex-col min-h-screen">
             <Navbar />

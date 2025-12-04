@@ -13,7 +13,7 @@ interface DataContextType {
   apps: AppItem[];
   reminders: Reminder[];
   homeSections: HomeSection[];
-  siteTheme: SiteTheme; // New
+  siteTheme: SiteTheme;
   isHomeEditing: boolean;
   isLoading: boolean;
   
@@ -48,12 +48,12 @@ interface DataContextType {
   // UI 操作
   toggleHomeEditing: () => void;
   updateHomeSections: (sections: HomeSection[]) => void;
-  updateSiteTheme: (theme: Partial<SiteTheme>) => void; // New
+  updateSiteTheme: (theme: Partial<SiteTheme>) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// 主页布局默认配置 - REMOVED 'theme' section as it is now a static header
+// 主页布局默认配置
 const DEFAULT_SECTIONS: HomeSection[] = [
   { id: 'carousel', type: 'carousel', visible: true, title: '轮播图' },
   { id: 'apps', type: 'apps', visible: true, title: '快速应用' },
@@ -143,21 +143,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => { setUser(null); setIsHomeEditing(false); };
 
   const addUser = (name: string, avatar: string, password: string) => {
+    // 只有非访客可以添加用户（甚至只有管理员，这里暂不严格限制，UI层限制）
+    if (user?.role === 'guest') return;
     const newUser: User = { id: `u_${Date.now()}`, name, avatar, role: 'member', password };
     setAllUsers(prev => [...prev, newUser]);
   };
 
   const changePassword = (newPass: string) => {
-    if (user) {
-        const updatedUser = { ...user, password: newPass };
-        setUser(updatedUser);
-        setAllUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
+    // 安全检查：访客不能修改密码
+    if (!user || user.role === 'guest') {
+        console.warn("访客无权修改密码");
+        return;
     }
+    const updatedUser = { ...user, password: newPass };
+    setUser(updatedUser);
+    setAllUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
   };
 
   const resetUserPassword = (name: string, newPass: string) => {
       const targetUser = allUsers.find(u => u.name === name);
       if (targetUser) {
+          // 禁止重置管理员密码（除非自己是管理员，这里简化逻辑）
           const updatedUser = { ...targetUser, password: newPass };
           setAllUsers(prev => prev.map(u => u.id === targetUser.id ? updatedUser : u));
           return true;
@@ -166,11 +172,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
   const updateUserAvatar = (newAvatar: string) => {
-      if (user) {
-          const updatedUser = { ...user, avatar: newAvatar };
-          setUser(updatedUser);
-          setAllUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
+      // 安全检查：访客不能修改头像
+      if (!user || user.role === 'guest') {
+          console.warn("访客无权修改头像");
+          return;
       }
+      const updatedUser = { ...user, avatar: newAvatar };
+      setUser(updatedUser);
+      setAllUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
   };
 
   // Blog

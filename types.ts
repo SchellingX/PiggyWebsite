@@ -69,7 +69,7 @@ export interface SearchResult {
 
 export interface HomeSection {
   id: string;
-  type: 'carousel' | 'apps' | 'blogs' | 'notices'; // Removed 'theme' as it is now a static hero header
+  type: 'carousel' | 'apps' | 'blogs' | 'notices'; 
   visible: boolean;
   title: string;
 }

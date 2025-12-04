@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isChangePassModalOpen, setIsChangePassModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false); // Decoration Modal
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false); 
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -68,7 +68,6 @@ const Navbar: React.FC = () => {
 
   // --- 处理函数 ---
 
-  // 新用户头像上传预览
   const handleNewUserAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -80,7 +79,6 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // 创建新用户
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUserName && newUserPassword) {
@@ -94,7 +92,6 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // 修改密码提交
   const handleChangePassword = (e: React.FormEvent) => {
       e.preventDefault();
       if (newPasswordInput) {
@@ -105,7 +102,6 @@ const Navbar: React.FC = () => {
       }
   };
 
-  // 个人头像修改预览
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
@@ -117,7 +113,6 @@ const Navbar: React.FC = () => {
       }
   };
 
-  // 保存新头像
   const handleSaveAvatar = () => {
       if (avatarUploadPreview) {
           updateUserAvatar(avatarUploadPreview);
@@ -126,7 +121,6 @@ const Navbar: React.FC = () => {
       }
   };
   
-  // 处理主题图片上传
   const handleThemeImageUpload = (key: keyof typeof siteTheme, e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
@@ -138,13 +132,15 @@ const Navbar: React.FC = () => {
       }
   };
 
+  const isGuest = user.role === 'guest';
+
   return (
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-serif ${
           isScrolled || isMobileMenuOpen || location.pathname !== '/'
             ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-amber-100'
-            : 'bg-transparent text-white' // Transparent on top of home hero
+            : 'bg-transparent text-white' 
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -231,30 +227,39 @@ const Navbar: React.FC = () => {
                     </div>
                     
                     <div className="p-1">
-                        <button
-                           onClick={() => { setIsAvatarModalOpen(true); setIsUserMenuOpen(false); }}
-                           className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
-                        >
-                            <Camera size={16} className="text-slate-400" /> 修改头像
-                        </button>
-                        <button
-                           onClick={() => { setIsChangePassModalOpen(true); setIsUserMenuOpen(false); }}
-                           className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
-                        >
-                            <Key size={16} className="text-slate-400" /> 修改密码
-                        </button>
+                        {!isGuest && (
+                          <>
+                            <button
+                               onClick={() => { setIsAvatarModalOpen(true); setIsUserMenuOpen(false); }}
+                               className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
+                            >
+                                <Camera size={16} className="text-slate-400" /> 修改头像
+                            </button>
+                            <button
+                               onClick={() => { setIsChangePassModalOpen(true); setIsUserMenuOpen(false); }}
+                               className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
+                            >
+                                <Key size={16} className="text-slate-400" /> 修改密码
+                            </button>
+                          </>
+                        )}
+                        {isGuest && (
+                          <div className="px-3 py-2 text-xs text-slate-400 italic text-center">访客无法修改资料</div>
+                        )}
                     </div>
 
                     <div className="p-1 border-t border-slate-50">
-                      <button
-                        onClick={() => {
-                          setIsAddUserModalOpen(true);
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
-                      >
-                         <UserPlus size={16} className="text-slate-400" /> 添加账户
-                      </button>
+                      {!isGuest && (
+                          <button
+                            onClick={() => {
+                              setIsAddUserModalOpen(true);
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                             <UserPlus size={16} className="text-slate-400" /> 添加账户
+                          </button>
+                      )}
                       <button
                         onClick={() => {
                           logout();
@@ -322,8 +327,6 @@ const Navbar: React.FC = () => {
         )}
       </nav>
 
-      {/* --- 模态框组件 --- */}
-      
       {/* 网站装修模态框 */}
       {isThemeModalOpen && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-serif">

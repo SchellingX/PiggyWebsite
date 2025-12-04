@@ -14,7 +14,7 @@ const ASSETS = {
 export const DEFAULT_SITE_THEME: SiteTheme = {
   mainBg: ASSETS.bgMain,
   loginBg: ASSETS.bgLogin,
-  homeBanner: ASSETS.slide1, // Default banner
+  homeBanner: ASSETS.slide1,
 };
 
 export const ALL_USERS: User[] = [

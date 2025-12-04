@@ -14,7 +14,7 @@ const Home: React.FC = () => {
     homeSections, 
     isHomeEditing, 
     updateHomeSections,
-    siteTheme // Get the theme data
+    siteTheme 
   } = useData();
 
   // 获取概览数据
@@ -187,23 +187,22 @@ const Home: React.FC = () => {
     <div className="min-h-screen">
       {/* 
         Hero Header Section
-        This is the fixed full-width banner at the top, blending into the page.
+        Full width banner merging into content
       */}
-      <div className="relative w-full h-[60vh] overflow-hidden">
-        {/* The Banner Image */}
+      <div className="relative w-full h-[65vh] overflow-hidden">
+        {/* Banner Image */}
         <div 
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center transition-all duration-1000"
           style={{ backgroundImage: `url('${siteTheme.homeBanner}')` }}
         />
         
-        {/* Gradient Overlay for blending */}
-        {/* Gradient from transparent at top to white (or page color) at bottom */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#FDFCFD] opacity-100" />
+        {/* Gradient Overlay for blending - Fades from transparent to the page background color */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#FDFCFD]" />
 
-        {/* Optional Text Overlay */}
-        <div className="absolute bottom-1/3 left-0 w-full text-center px-4">
-             <h1 className="text-4xl md:text-6xl font-bold text-white drop-shadow-xl font-serif tracking-wide mb-2">暖暖的猪窝</h1>
-             <p className="text-white/90 text-lg md:text-xl font-medium drop-shadow-md">记录爱与泥巴的点点滴滴</p>
+        {/* Text Overlay */}
+        <div className="absolute top-1/2 left-0 w-full text-center px-4 -translate-y-1/2">
+             <h1 className="text-4xl md:text-7xl font-bold text-white drop-shadow-xl font-serif tracking-wide mb-4 animate-fade-in">暖暖的猪窝</h1>
+             <p className="text-white/95 text-xl md:text-2xl font-medium drop-shadow-lg tracking-wider animate-fade-in delay-100">记录爱与泥巴的点点滴滴</p>
         </div>
       </div>
 
@@ -212,7 +211,7 @@ const Home: React.FC = () => {
         Overlaps the banner slightly with negative margin
       */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 -mt-32 pb-10">
-          <div className="space-y-12">
+          <div className="space-y-16">
             {homeSections.map((section, index) => renderSection(section, index))}
             
             {isHomeEditing && (
