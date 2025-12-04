@@ -1,8 +1,9 @@
+
 import React, { useRef } from 'react';
 import HomeCarousel from '../components/HomeCarousel';
 import { useData } from '../context/DataContext';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, User, Clock, Trash2, GripVertical, Plus } from 'lucide-react';
+import { ArrowRight, Calendar, User, Clock, Trash2, GripVertical, Plus, Star } from 'lucide-react';
 import { HomeSection } from '../types';
 
 const Home: React.FC = () => {
@@ -21,8 +22,6 @@ const Home: React.FC = () => {
   const incompleteReminders = reminders.filter(r => !r.completed);
 
   // --- 布局管理逻辑 ---
-  
-  // 上下移动版块
   const moveSection = (index: number, direction: 'up' | 'down') => {
     if ((direction === 'up' && index === 0) || (direction === 'down' && index === homeSections.length - 1)) return;
     const newSections = [...homeSections];
@@ -31,23 +30,19 @@ const Home: React.FC = () => {
     updateHomeSections(newSections);
   };
 
-  // 隐藏版块
   const deleteSection = (id: string) => {
     const newSections = homeSections.map(s => s.id === id ? { ...s, visible: false } : s);
     updateHomeSections(newSections);
   };
 
-  // 恢复/添加版块
   const addSection = (id: string) => {
     const newSections = homeSections.map(s => s.id === id ? { ...s, visible: true } : s);
     updateHomeSections(newSections);
   };
   
-  // 拖拽相关 Refs
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
-  // 处理拖拽排序
   const handleSort = () => {
     if (dragItem.current === null || dragOverItem.current === null) return;
     const newSections = [...homeSections];
@@ -64,6 +59,19 @@ const Home: React.FC = () => {
 
     let content = null;
     switch (section.type) {
+      case 'theme': // New Theme Section
+        content = (
+            <div className="w-full h-48 md:h-64 rounded-3xl overflow-hidden shadow-lg border-4 border-white relative group">
+                <img src="/assets/slide1.jpg" alt="Theme Background" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-white/60 flex flex-col items-center justify-center p-6 text-center backdrop-blur-[2px]">
+                     <div className="w-16 h-1 bg-amber-400 mb-6 rounded-full"></div>
+                     <h2 className="text-3xl md:text-4xl font-bold text-amber-900 mb-2 font-serif">今日主题：快乐周末</h2>
+                     <p className="text-slate-600 font-medium text-lg">"最好的时光都在家里"</p>
+                     {!isHomeEditing && <button className="mt-4 px-6 py-2 bg-amber-500 text-white rounded-full font-bold text-sm shadow-md hover:bg-amber-600 transition-colors">更换主题</button>}
+                </div>
+            </div>
+        );
+        break;
       case 'carousel':
         content = <HomeCarousel />;
         break;
@@ -108,7 +116,7 @@ const Home: React.FC = () => {
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {recentBlogs.map((blog) => (
-                <div key={blog.id} className={`bg-white/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-amber-100 transition-all duration-300 border border-white flex flex-col h-full ${isHomeEditing ? 'pointer-events-none' : ''}`}>
+                <div key={blog.id} className={`bg-[#FFF9E6] rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-amber-100 transition-all duration-300 border-2 border-white flex flex-col h-full ${isHomeEditing ? 'pointer-events-none' : ''}`}>
                   <div className="h-48 overflow-hidden">
                     <img src={blog.image} alt={blog.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                   </div>
@@ -118,7 +126,7 @@ const Home: React.FC = () => {
                       <span className="flex items-center"><User size={12} className="mr-1" /> {blog.author.name}</span>
                     </div>
                     <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-1">{blog.title}</h3>
-                    <p className="text-slate-500 text-sm mb-4 flex-1 line-clamp-2 leading-relaxed">{blog.excerpt}</p>
+                    <p className="text-slate-600 text-sm mb-4 flex-1 line-clamp-2 leading-relaxed">{blog.excerpt}</p>
                     <div className="text-amber-600 font-bold text-sm mt-auto inline-block hover:underline">
                       阅读更多
                     </div>
@@ -159,7 +167,6 @@ const Home: React.FC = () => {
         break;
     }
 
-    // 编辑模式下的版块包裹器
     if (isHomeEditing) {
       if (!section.visible) return null;
       return (
@@ -190,10 +197,8 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-12 pb-10 min-h-[60vh]">
-      {/* 渲染所有可见版块 */}
       {homeSections.map((section, index) => renderSection(section, index))}
       
-      {/* 编辑模式下显示已隐藏的版块，供添加 */}
       {isHomeEditing && (
         <div className="border-t-2 border-dashed border-slate-200 pt-8 mt-12">
             <h3 className="text-center text-slate-400 font-medium mb-6">已隐藏的板块 (点击添加)</h3>

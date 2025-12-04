@@ -1,3 +1,4 @@
+
 import { AppItem, BlogPost, Photo, User, Reminder } from './types';
 
 // Use local assets from public/assets folder
@@ -58,6 +59,7 @@ export const MOCK_BLOGS: BlogPost[] = [
     date: new Date(Date.now() - 86400000 * 2).toISOString(),
     tags: ['家庭', '野餐', '美食'],
     likes: 12,
+    isCollected: false,
     image: ASSETS.slide1,
     comments: [
       { id: 'c1', author: '妈咪', text: '蛋糕真好吃！', date: new Date().toISOString() }
@@ -72,6 +74,7 @@ export const MOCK_BLOGS: BlogPost[] = [
     date: new Date(Date.now() - 86400000 * 5).toISOString(),
     tags: ['玩具', '圆圆'],
     likes: 8,
+    isCollected: true,
     image: ASSETS.slide2,
     comments: []
   }
@@ -85,7 +88,10 @@ export const MOCK_PHOTOS: Photo[] = [
     category: '旅行',
     date: '2023-10-01',
     takenBy: '妈咪',
-    source: 'local'
+    source: 'local',
+    likes: 5,
+    isCollected: false,
+    comments: []
   },
   {
     id: 'p2',
@@ -94,7 +100,12 @@ export const MOCK_PHOTOS: Photo[] = [
     category: '活动',
     date: '2023-09-15',
     takenBy: '爸比',
-    source: 'local'
+    source: 'local',
+    likes: 10,
+    isCollected: true,
+    comments: [
+        { id: 'pc1', author: '圆圆', text: '好玩！', date: new Date().toISOString() }
+    ]
   },
   {
     id: 'p3',
@@ -103,7 +114,10 @@ export const MOCK_PHOTOS: Photo[] = [
     category: '日常',
     date: '2023-11-20',
     takenBy: '圆圆',
-    source: 'local'
+    source: 'local',
+    likes: 2,
+    isCollected: false,
+    comments: []
   }
 ];
 

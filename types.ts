@@ -7,6 +7,13 @@ export interface User {
   password?: string;
 }
 
+export interface Comment {
+  id: string;
+  author: string;
+  text: string;
+  date: string;
+}
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -16,15 +23,9 @@ export interface BlogPost {
   date: string; // ISO string
   tags: string[];
   likes: number;
+  isCollected: boolean; // Added
   image?: string;
   comments: Comment[];
-}
-
-export interface Comment {
-  id: string;
-  author: string;
-  text: string;
-  date: string;
 }
 
 export interface Photo {
@@ -36,6 +37,10 @@ export interface Photo {
   takenBy: string;
   source?: 'local' | 'mount';
   mediaType?: 'image' | 'video';
+  // New interaction fields
+  likes: number;
+  isCollected: boolean;
+  comments: Comment[];
 }
 
 export interface AppItem {
@@ -65,7 +70,7 @@ export interface SearchResult {
 
 export interface HomeSection {
   id: string;
-  type: 'carousel' | 'apps' | 'blogs' | 'notices';
+  type: 'theme' | 'carousel' | 'apps' | 'blogs' | 'notices'; // Added 'theme'
   visible: boolean;
   title: string;
 }
