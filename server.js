@@ -11,7 +11,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 80;
+// Cloud Run 默认注入 PORT 环境变量，通常为 8080
+const PORT = parseInt(process.env.PORT) || 8080;
 
 // --- 中间件配置 ---
 
@@ -61,7 +62,7 @@ const writeDb = (data) => {
     
     // 如果包含博客数据，同时也将其保存为 Markdown 文件
     if (data.blogs && Array.isArray(data.blogs)) {
-      saveBlogsAsMarkdown(data.blogs);
+      setTimeout(() => saveBlogsAsMarkdown(data.blogs), 0); // 异步执行防止阻塞
     }
     
     return true;
@@ -104,6 +105,11 @@ ${blog.content}
 
 // --- API 路由 ---
 
+// 健康检查端点 (Cloud Run 推荐)
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // 获取全站数据
 app.get('/api/data', (req, res) => {
   const data = readDb();
@@ -140,8 +146,9 @@ app.get('*', (req, res) => {
 
 // --- 启动服务器 ---
 
-app.listen(PORT, () => {
-  console.log(`🐷 猪一家服务器运行在端口 ${PORT}`);
+// 关键修改：必须显式绑定 '0.0.0.0'，否则在 Docker 容器中无法被外部访问
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 猪一家服务器启动成功`);
+  console.log(`📡 监听地址: http://0.0.0.0:${PORT}`);
   console.log(`📁 数据目录: ${DATA_DIR}`);
-  console.log(`📝 博客目录: ${POSTS_DIR}`);
 });
