@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Image, Grid, Search, Menu, X, ChevronDown, UserPlus, Key, Camera, Layout, LogOut } from 'lucide-react';
+import { Home, BookOpen, Image, Grid, Search, Menu, X, ChevronDown, UserPlus, Key, Camera, Layout, LogOut, Palette, Upload } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 const Navbar: React.FC = () => {
-  const { user, logout, addUser, isHomeEditing, toggleHomeEditing, changePassword, updateUserAvatar } = useData();
+  const { user, logout, addUser, isHomeEditing, toggleHomeEditing, changePassword, updateUserAvatar, updateSiteTheme, siteTheme } = useData();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -13,6 +14,7 @@ const Navbar: React.FC = () => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isChangePassModalOpen, setIsChangePassModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false); // Decoration Modal
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -123,14 +125,26 @@ const Navbar: React.FC = () => {
           setAvatarUploadPreview('');
       }
   };
+  
+  // 处理主题图片上传
+  const handleThemeImageUpload = (key: keyof typeof siteTheme, e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              updateSiteTheme({ [key]: reader.result as string });
+          };
+          reader.readAsDataURL(file);
+      }
+  };
 
   return (
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-serif ${
-          isScrolled || isMobileMenuOpen
+          isScrolled || isMobileMenuOpen || location.pathname !== '/'
             ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-amber-100'
-            : 'bg-transparent'
+            : 'bg-transparent text-white' // Transparent on top of home hero
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -140,7 +154,7 @@ const Navbar: React.FC = () => {
               <div className="w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center shadow-md border-2 border-white">
                 <img src="/assets/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
               </div>
-              <span className="font-bold text-slate-800 tracking-tight text-xl">猪一家</span>
+              <span className={`font-bold tracking-tight text-xl ${isScrolled || location.pathname !== '/' ? 'text-slate-800' : 'text-white drop-shadow-md'}`}>猪一家</span>
             </Link>
 
             {/* 桌面端菜单 */}
@@ -152,7 +166,7 @@ const Navbar: React.FC = () => {
                   className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                     isActive(link.path)
                       ? 'bg-amber-400 text-white shadow-md shadow-amber-200'
-                      : 'text-slate-600 hover:bg-amber-50 hover:text-amber-800'
+                      : (isScrolled || location.pathname !== '/') ? 'text-slate-600 hover:bg-amber-50 hover:text-amber-800' : 'text-white/90 hover:bg-white/20 hover:text-white'
                   }`}
                 >
                   {link.icon}
@@ -169,11 +183,24 @@ const Navbar: React.FC = () => {
                   className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${
                     isHomeEditing 
                       ? 'bg-slate-800 text-white border-slate-800' 
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-amber-300'
+                      : (isScrolled || location.pathname !== '/') ? 'bg-white text-slate-600 border-slate-200 hover:border-amber-300' : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
                   }`}
+                  title="调整布局"
                 >
                   <Layout size={14} />
-                  {isHomeEditing ? '完成调整' : '调整页面'}
+                </button>
+              )}
+              
+              {/* 管理员可见：主题装修按钮 */}
+              {user.role === 'admin' && (
+                <button
+                  onClick={() => setIsThemeModalOpen(true)}
+                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${
+                     (isScrolled || location.pathname !== '/') ? 'bg-white text-slate-600 border-slate-200 hover:border-amber-300' : 'bg-white/20 text-white border-white/30 hover:bg-white/30'
+                  }`}
+                  title="网站装修"
+                >
+                  <Palette size={14} />
                 </button>
               )}
 
@@ -181,15 +208,17 @@ const Navbar: React.FC = () => {
               <div className="relative ml-2" ref={userMenuRef}>
                 <button 
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-white/80 border border-transparent hover:border-amber-100 transition-all bg-white/40"
+                  className={`flex items-center gap-2 p-1 pr-3 rounded-full border transition-all ${
+                      (isScrolled || location.pathname !== '/') ? 'hover:bg-white/80 border-transparent hover:border-amber-100 bg-white/40' : 'hover:bg-black/20 border-transparent bg-black/10 text-white'
+                  }`}
                 >
                   <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-sm" />
-                  <span className="text-sm font-bold text-slate-700 hidden sm:block">{user.name}</span>
-                  <ChevronDown size={14} className="text-slate-400" />
+                  <span className={`text-sm font-bold hidden sm:block ${(isScrolled || location.pathname !== '/') ? 'text-slate-700' : 'text-white'}`}>{user.name}</span>
+                  <ChevronDown size={14} className={(isScrolled || location.pathname !== '/') ? "text-slate-400" : "text-white/70"} />
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-amber-50 overflow-hidden animate-fade-in origin-top-right">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-amber-50 overflow-hidden animate-fade-in origin-top-right z-[60]">
                     <div className="px-4 py-4 border-b border-slate-50 bg-amber-50/30">
                       <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">当前登录</p>
                       <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
@@ -244,7 +273,9 @@ const Navbar: React.FC = () => {
               <div className="md:hidden ml-2">
                 <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                  className={`p-2 rounded-lg transition-colors ${
+                      (isScrolled || location.pathname !== '/') ? 'text-slate-600 hover:bg-slate-100' : 'text-white hover:bg-white/20'
+                  }`}
                 >
                   {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
@@ -272,6 +303,14 @@ const Navbar: React.FC = () => {
                   {link.name}
                 </Link>
               ))}
+              {user.role === 'admin' && (
+                  <button
+                    onClick={() => { setIsThemeModalOpen(true); setIsMobileMenuOpen(false); }}
+                    className="w-full text-left px-4 py-3 rounded-xl text-base font-bold flex items-center gap-3 text-slate-600 hover:bg-slate-50"
+                  >
+                     <Palette size={18} /> 网站装修
+                  </button>
+              )}
               <button
                 onClick={() => { logout(); setIsMobileMenuOpen(false); }}
                 className="w-full text-left px-4 py-3 rounded-xl text-base font-bold flex items-center gap-3 text-red-500 hover:bg-red-50"
@@ -283,7 +322,72 @@ const Navbar: React.FC = () => {
         )}
       </nav>
 
-      {/* --- 模态框组件 (添加用户、修改密码、修改头像) --- */}
+      {/* --- 模态框组件 --- */}
+      
+      {/* 网站装修模态框 */}
+      {isThemeModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in font-serif">
+              <div className="bg-white rounded-3xl w-full max-w-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-8">
+                      <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600"><Palette size={20}/></div>
+                          <h2 className="text-2xl font-bold text-slate-800">网站外观装修</h2>
+                      </div>
+                      <button onClick={() => setIsThemeModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-8">
+                      {/* 主页头部Banner */}
+                      <div className="space-y-3">
+                          <h3 className="font-bold text-slate-700">主页头部海报</h3>
+                          <div className="relative group rounded-2xl overflow-hidden aspect-video bg-slate-100 border-2 border-dashed border-slate-300 hover:border-amber-400 transition-colors">
+                              <img src={siteTheme.homeBanner} className="w-full h-full object-cover" alt="Home Banner"/>
+                              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
+                                  <Upload size={24} className="mb-2"/>
+                                  <span className="text-xs font-bold">点击更换</span>
+                                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleThemeImageUpload('homeBanner', e)} />
+                              </label>
+                          </div>
+                          <p className="text-xs text-slate-500">建议尺寸: 1920x1080, 将作为主页全屏背景展示。</p>
+                      </div>
+
+                      {/* 全站通用背景 */}
+                      <div className="space-y-3">
+                          <h3 className="font-bold text-slate-700">全站通用背景</h3>
+                          <div className="relative group rounded-2xl overflow-hidden aspect-video bg-slate-100 border-2 border-dashed border-slate-300 hover:border-amber-400 transition-colors">
+                              <img src={siteTheme.mainBg} className="w-full h-full object-cover" alt="Main BG"/>
+                              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
+                                  <Upload size={24} className="mb-2"/>
+                                  <span className="text-xs font-bold">点击更换</span>
+                                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleThemeImageUpload('mainBg', e)} />
+                              </label>
+                          </div>
+                          <p className="text-xs text-slate-500">显示在博客、相册等内页的背景图。</p>
+                      </div>
+
+                      {/* 登录页背景 */}
+                      <div className="space-y-3">
+                          <h3 className="font-bold text-slate-700">登录页背景</h3>
+                          <div className="relative group rounded-2xl overflow-hidden aspect-video bg-slate-100 border-2 border-dashed border-slate-300 hover:border-amber-400 transition-colors">
+                              <img src={siteTheme.loginBg} className="w-full h-full object-cover" alt="Login BG"/>
+                              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
+                                  <Upload size={24} className="mb-2"/>
+                                  <span className="text-xs font-bold">点击更换</span>
+                                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleThemeImageUpload('loginBg', e)} />
+                              </label>
+                          </div>
+                          <p className="text-xs text-slate-500">独立于全站背景，仅在登录页显示。</p>
+                      </div>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-slate-100 text-right">
+                      <button onClick={() => setIsThemeModalOpen(false)} className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">完成装修</button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* 用户相关模态框 (保持不变) */}
       {isAddUserModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-serif">
           <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">

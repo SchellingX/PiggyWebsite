@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Lock, User, HelpCircle, Check, ArrowRight, Heart } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login, resetUserPassword } = useData();
+  const { login, resetUserPassword, siteTheme } = useData();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -68,7 +69,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 font-serif relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: "url('/assets/bg-login.jpg')" }}>
+    <div className="min-h-screen flex items-center justify-center px-4 font-serif relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url('${siteTheme.loginBg}')` }}>
         {/* 背景遮罩 */}
         <div className="absolute inset-0 bg-amber-900/10 backdrop-blur-sm z-0"></div>
 

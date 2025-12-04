@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import HomeCarousel from '../components/HomeCarousel';
 import { useData } from '../context/DataContext';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, User, Clock, Trash2, GripVertical, Plus, Star } from 'lucide-react';
+import { ArrowRight, Calendar, User, Clock, Trash2, GripVertical, Plus } from 'lucide-react';
 import { HomeSection } from '../types';
 
 const Home: React.FC = () => {
@@ -13,7 +13,8 @@ const Home: React.FC = () => {
     reminders, 
     homeSections, 
     isHomeEditing, 
-    updateHomeSections 
+    updateHomeSections,
+    siteTheme // Get the theme data
   } = useData();
 
   // 获取概览数据
@@ -59,19 +60,6 @@ const Home: React.FC = () => {
 
     let content = null;
     switch (section.type) {
-      case 'theme': // New Theme Section
-        content = (
-            <div className="w-full h-48 md:h-64 rounded-3xl overflow-hidden shadow-lg border-4 border-white relative group">
-                <img src="/assets/slide1.jpg" alt="Theme Background" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-white/60 flex flex-col items-center justify-center p-6 text-center backdrop-blur-[2px]">
-                     <div className="w-16 h-1 bg-amber-400 mb-6 rounded-full"></div>
-                     <h2 className="text-3xl md:text-4xl font-bold text-amber-900 mb-2 font-serif">今日主题：快乐周末</h2>
-                     <p className="text-slate-600 font-medium text-lg">"最好的时光都在家里"</p>
-                     {!isHomeEditing && <button className="mt-4 px-6 py-2 bg-amber-500 text-white rounded-full font-bold text-sm shadow-md hover:bg-amber-600 transition-colors">更换主题</button>}
-                </div>
-            </div>
-        );
-        break;
       case 'carousel':
         content = <HomeCarousel />;
         break;
@@ -196,25 +184,55 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="space-y-12 pb-10 min-h-[60vh]">
-      {homeSections.map((section, index) => renderSection(section, index))}
-      
-      {isHomeEditing && (
-        <div className="border-t-2 border-dashed border-slate-200 pt-8 mt-12">
-            <h3 className="text-center text-slate-400 font-medium mb-6">已隐藏的板块 (点击添加)</h3>
-            <div className="flex flex-wrap justify-center gap-4">
-                {homeSections.filter(s => !s.visible).map(section => (
-                    <button
-                        key={section.id}
-                        onClick={() => addSection(section.id)}
-                        className="flex items-center gap-2 px-5 py-3 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 font-bold hover:border-amber-400 hover:text-amber-600 transition-all"
-                    >
-                        <Plus size={18} /> {section.title}
-                    </button>
-                ))}
-            </div>
+    <div className="min-h-screen">
+      {/* 
+        Hero Header Section
+        This is the fixed full-width banner at the top, blending into the page.
+      */}
+      <div className="relative w-full h-[60vh] overflow-hidden">
+        {/* The Banner Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url('${siteTheme.homeBanner}')` }}
+        />
+        
+        {/* Gradient Overlay for blending */}
+        {/* Gradient from transparent at top to white (or page color) at bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#FDFCFD] opacity-100" />
+
+        {/* Optional Text Overlay */}
+        <div className="absolute bottom-1/3 left-0 w-full text-center px-4">
+             <h1 className="text-4xl md:text-6xl font-bold text-white drop-shadow-xl font-serif tracking-wide mb-2">暖暖的猪窝</h1>
+             <p className="text-white/90 text-lg md:text-xl font-medium drop-shadow-md">记录爱与泥巴的点点滴滴</p>
         </div>
-      )}
+      </div>
+
+      {/* 
+        Main Content Area 
+        Overlaps the banner slightly with negative margin
+      */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 -mt-32 pb-10">
+          <div className="space-y-12">
+            {homeSections.map((section, index) => renderSection(section, index))}
+            
+            {isHomeEditing && (
+              <div className="border-t-2 border-dashed border-slate-200 pt-8 mt-12 bg-white/50 p-6 rounded-3xl">
+                  <h3 className="text-center text-slate-400 font-medium mb-6">已隐藏的板块 (点击添加)</h3>
+                  <div className="flex flex-wrap justify-center gap-4">
+                      {homeSections.filter(s => !s.visible).map(section => (
+                          <button
+                              key={section.id}
+                              onClick={() => addSection(section.id)}
+                              className="flex items-center gap-2 px-5 py-3 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 font-bold hover:border-amber-400 hover:text-amber-600 transition-all"
+                          >
+                              <Plus size={18} /> {section.title}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+            )}
+          </div>
+      </div>
     </div>
   );
 };

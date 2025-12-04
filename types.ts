@@ -23,7 +23,7 @@ export interface BlogPost {
   date: string; // ISO string
   tags: string[];
   likes: number;
-  isCollected: boolean; // Added
+  isCollected: boolean;
   image?: string;
   comments: Comment[];
 }
@@ -37,7 +37,6 @@ export interface Photo {
   takenBy: string;
   source?: 'local' | 'mount';
   mediaType?: 'image' | 'video';
-  // New interaction fields
   likes: number;
   isCollected: boolean;
   comments: Comment[];
@@ -46,7 +45,7 @@ export interface Photo {
 export interface AppItem {
   id: string;
   name: string;
-  icon: string; // Lucide icon name or emoji
+  icon: string;
   category: string;
   description: string;
   url?: string;
@@ -70,7 +69,13 @@ export interface SearchResult {
 
 export interface HomeSection {
   id: string;
-  type: 'theme' | 'carousel' | 'apps' | 'blogs' | 'notices'; // Added 'theme'
+  type: 'carousel' | 'apps' | 'blogs' | 'notices'; // Removed 'theme' as it is now a static hero header
   visible: boolean;
   title: string;
+}
+
+export interface SiteTheme {
+  mainBg: string;
+  loginBg: string;
+  homeBanner: string;
 }

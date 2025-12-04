@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { BlogPost, Photo, AppItem, User, Reminder, HomeSection } from '../types';
-import { MOCK_BLOGS, MOCK_PHOTOS, MOCK_APPS, ALL_USERS, MOCK_REMINDERS } from '../constants';
+import { BlogPost, Photo, AppItem, User, Reminder, HomeSection, SiteTheme } from '../types';
+import { MOCK_BLOGS, MOCK_PHOTOS, MOCK_APPS, ALL_USERS, MOCK_REMINDERS, DEFAULT_SITE_THEME } from '../constants';
 
 // --- 类型定义 ---
 interface DataContextType {
@@ -13,6 +13,7 @@ interface DataContextType {
   apps: AppItem[];
   reminders: Reminder[];
   homeSections: HomeSection[];
+  siteTheme: SiteTheme; // New
   isHomeEditing: boolean;
   isLoading: boolean;
   
@@ -29,14 +30,14 @@ interface DataContextType {
   updateBlog: (post: BlogPost) => void;
   deleteBlog: (id: string) => void;
   likeBlog: (id: string) => void;
-  collectBlog: (id: string) => void; // Added
-  commentBlog: (id: string, text: string) => void; // Added
+  collectBlog: (id: string) => void;
+  commentBlog: (id: string, text: string) => void;
 
   // 相册操作
   addPhoto: (photo: Photo) => void;
-  likePhoto: (id: string) => void; // Added
-  collectPhoto: (id: string) => void; // Added
-  commentPhoto: (id: string, text: string) => void; // Added
+  likePhoto: (id: string) => void;
+  collectPhoto: (id: string) => void;
+  commentPhoto: (id: string, text: string) => void;
 
   // 应用/提醒操作
   addApp: (app: AppItem) => void;
@@ -47,13 +48,13 @@ interface DataContextType {
   // UI 操作
   toggleHomeEditing: () => void;
   updateHomeSections: (sections: HomeSection[]) => void;
+  updateSiteTheme: (theme: Partial<SiteTheme>) => void; // New
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// 主页布局默认配置
+// 主页布局默认配置 - REMOVED 'theme' section as it is now a static header
 const DEFAULT_SECTIONS: HomeSection[] = [
-  { id: 'theme', type: 'theme', visible: true, title: '今日主题' }, // New default section
   { id: 'carousel', type: 'carousel', visible: true, title: '轮播图' },
   { id: 'apps', type: 'apps', visible: true, title: '快速应用' },
   { id: 'blogs', type: 'blogs', visible: true, title: '最新博客' },
@@ -69,6 +70,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [apps, setApps] = useState<AppItem[]>(MOCK_APPS);
   const [reminders, setReminders] = useState<Reminder[]>(MOCK_REMINDERS);
   const [homeSections, setHomeSections] = useState<HomeSection[]>(DEFAULT_SECTIONS);
+  const [siteTheme, setSiteTheme] = useState<SiteTheme>(DEFAULT_SITE_THEME);
   
   const [isHomeEditing, setIsHomeEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,7 +85,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (res.ok) {
           const data = await res.json();
           if (data.initialized === false) {
-             saveToBackend({ allUsers, blogs, photos, apps, reminders, homeSections });
+             saveToBackend({ allUsers, blogs, photos, apps, reminders, homeSections, siteTheme });
           } else {
              if (data.allUsers) setAllUsers(data.allUsers);
              if (data.blogs) setBlogs(data.blogs);
@@ -91,6 +93,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
              if (data.apps) setApps(data.apps);
              if (data.reminders) setReminders(data.reminders);
              if (data.homeSections) setHomeSections(data.homeSections);
+             if (data.siteTheme) setSiteTheme(data.siteTheme);
           }
         }
       } catch (error) {
@@ -119,10 +122,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
       if (!isInitialized.current) return;
       const timer = setTimeout(() => {
-          saveToBackend({ allUsers, blogs, photos, apps, reminders, homeSections });
+          saveToBackend({ allUsers, blogs, photos, apps, reminders, homeSections, siteTheme });
       }, 1000); 
       return () => clearTimeout(timer);
-  }, [allUsers, blogs, photos, apps, reminders, homeSections]);
+  }, [allUsers, blogs, photos, apps, reminders, homeSections, siteTheme]);
 
 
   // --- Action 具体实现 ---
@@ -215,15 +218,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // UI
   const toggleHomeEditing = () => { setIsHomeEditing(!isHomeEditing); };
   const updateHomeSections = (sections: HomeSection[]) => { setHomeSections(sections); };
+  
+  const updateSiteTheme = (newTheme: Partial<SiteTheme>) => {
+      setSiteTheme(prev => ({ ...prev, ...newTheme }));
+  };
 
   return (
     <DataContext.Provider value={{ 
-      user, allUsers, blogs, photos, apps, reminders, homeSections, isHomeEditing, isLoading,
+      user, allUsers, blogs, photos, apps, reminders, homeSections, siteTheme, isHomeEditing, isLoading,
       login, logout, resetUserPassword, changePassword, updateUserAvatar, addUser,
       addBlog, updateBlog, deleteBlog, likeBlog, collectBlog, commentBlog,
       addPhoto, likePhoto, collectPhoto, commentPhoto,
       addApp, addReminder, toggleReminder, deleteReminder,
-      toggleHomeEditing, updateHomeSections
+      toggleHomeEditing, updateHomeSections, updateSiteTheme
     }}>
       {children}
     </DataContext.Provider>

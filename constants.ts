@@ -1,5 +1,5 @@
 
-import { AppItem, BlogPost, Photo, User, Reminder } from './types';
+import { AppItem, BlogPost, Photo, User, Reminder, SiteTheme } from './types';
 
 // Use local assets from public/assets folder
 const ASSETS = {
@@ -7,6 +7,14 @@ const ASSETS = {
   slide1: '/assets/slide1.jpg',
   slide2: '/assets/slide2.jpg',
   slide3: '/assets/slide3.jpg',
+  bgMain: '/assets/bg-main.jpg',
+  bgLogin: '/assets/bg-login.jpg',
+};
+
+export const DEFAULT_SITE_THEME: SiteTheme = {
+  mainBg: ASSETS.bgMain,
+  loginBg: ASSETS.bgLogin,
+  homeBanner: ASSETS.slide1, // Default banner
 };
 
 export const ALL_USERS: User[] = [
