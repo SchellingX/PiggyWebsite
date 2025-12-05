@@ -12,7 +12,7 @@ const Apps: React.FC = () => {
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
   const [newReminderText, setNewReminderText] = useState('');
 
-  const canEdit = user.role === 'admin';
+  const canEdit = user?.role === 'admin';
   const filteredApps = apps.filter(app => app.name.toLowerCase().includes(searchTerm.toLowerCase()) || app.category.toLowerCase().includes(searchTerm.toLowerCase()));
   const categories = Array.from(new Set(apps.map(a => a.category)));
 

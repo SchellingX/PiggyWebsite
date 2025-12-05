@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   pig-family-hub:
@@ -9,76 +9,72 @@ services:
       args:
         # 从环境变量读取 API_KEY，构建时注入
         API_KEY: ${API_KEY:-default}
-    
-    # 镜像和容器名称
+
     image: pig-family-hub:latest
     container_name: pig-family-hub
-    
-    # 端口映射
+
+    # 建议使用 .env 或 CI/CD secret 注入敏感信息（见 .env.example）
+    env_file:
+      - .env
+
     ports:
       - "${PORT:-8080}:8080"
-    
-    # 卷挂载
+
+    # 卷：使用命名卷以便 Docker 管理存储；如果希望绑定主机目录，可改为 ./data:/app/data
     volumes:
-      # 数据库和博客归档持久化
-      - ./data:/app/data
-      # 媒体文件挂载目录
-      - ./media:/app/media
-    
-    # 环境变量
+      - data:/app/data
+      - media:/app/media
+
     environment:
-      # 服务器监听端口
       PORT: ${PORT:-8080}
-      # Google Gemini API 密钥
-      API_KEY: ${API_KEY:-default}
-      # 允许的跨域来源（逗号分隔）
+      API_KEY: ${API_KEY}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
-      # Node 环境
       NODE_ENV: ${NODE_ENV:-production}
-    
-    # 重启策略
+
     restart: unless-stopped
-    
-    # 健康检查
+
+    # 健康检查：使用容器内 node 进程请求本地 /health
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', r => { if (r.statusCode !== 200) process.exit(1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 5s
-    
-    # 日志配置
+
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-    
-    # 依赖关系（如有其他服务）
+
+    # 如果你使用反向代理（例如 Traefik / Nginx），可在这里声明依赖或网络配置
     # depends_on:
-    #   - database
+    #   - reverse-proxy
 
-  # 可选：Nginx 反向代理（用于 HTTPS）
-  # nginx:
-  #   image: nginx:latest
-  #   container_name: pig-family-hub-nginx
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #     - /etc/letsencrypt:/etc/letsencrypt
-  #   depends_on:
-  #     - pig-family-hub
-  #   restart: unless-stopped
+    networks:
+      - piggy-net
 
-# 网络配置（可选）
+# 推荐：通过一个轻量的反向代理容器（可选）来处理 HTTPS / TLS
+# 下面示例为 nginx 注释示例，按需开启
+#  nginx:
+#    image: nginx:stable-alpine
+#    container_name: piggy-nginx
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#      - ./certs:/etc/letsencrypt:ro
+#    depends_on:
+#      - pig-family-hub
+#    networks:
+#      - piggy-net
+#    restart: unless-stopped
+
 networks:
-  default:
-    name: pig-family-network
+  piggy-net:
     driver: bridge
 
-# 卷配置（可选，如需命名卷）
 volumes:
   data:
     driver: local

@@ -6,6 +6,7 @@ import { MessageSquare, Heart, Plus, X, Calendar, User, Tag, Image as ImageIcon,
 
 const Blog: React.FC = () => {
   const { blogs, addBlog, updateBlog, deleteBlog, likeBlog, collectBlog, commentBlog, user } = useData();
+  if (!user) return <div className="max-w-4xl mx-auto pb-12">请先登录以查看博客。</div>;
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(false);

@@ -5,7 +5,8 @@ import { Photo } from '../types';
 import { Filter, Upload, X, ChevronLeft, ChevronRight, PlayCircle, FolderOpen, Video, Heart, Star, MessageSquare, Send } from 'lucide-react';
 
 const Gallery: React.FC = () => {
-  const { photos, addPhoto, likePhoto, collectPhoto, commentPhoto, user } = useData();
+    const { photos, addPhoto, likePhoto, collectPhoto, commentPhoto, user } = useData();
+    if (!user) return <div className="pb-12">请先登录以查看相册。</div>;
   const [filter, setFilter] = useState<string>('全部');
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -14,7 +15,7 @@ const Gallery: React.FC = () => {
   const [mountCategory, setMountCategory] = useState('日常');
   const [newComment, setNewComment] = useState('');
 
-  const canUpload = user.role === 'admin' || user.role === 'member';
+    const canUpload = user?.role === 'admin' || user?.role === 'member';
   const categories = ['全部', '活动', '日常', '旅行', '有趣'];
   const filteredPhotos = filter === '全部' ? photos : photos.filter(p => p.category === filter);
 
@@ -32,7 +33,7 @@ const Gallery: React.FC = () => {
             caption: file.name.split('.')[0] || '新文件',
             category: '日常',
             date: new Date().toISOString().split('T')[0],
-            takenBy: user.name,
+            takenBy: user?.name ?? '匿名',
             source: 'local',
             mediaType: isVideo ? 'video' : 'image',
             likes: 0,
@@ -54,7 +55,7 @@ const Gallery: React.FC = () => {
           caption: mountFileName,
           category: mountCategory,
           date: new Date().toISOString().split('T')[0],
-          takenBy: user.name,
+          takenBy: user?.name ?? '匿名',
           source: 'mount',
           mediaType: isVideoFile(mountFileName) ? 'video' : 'image',
           likes: 0,

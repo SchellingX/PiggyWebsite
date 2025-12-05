@@ -3,32 +3,28 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 复制项目文件
+# 复制项目文件（使用 .dockerignore 忽略 node_modules 等）
 COPY package.json package-lock.json* yarn.lock* ./
-COPY tsconfig.json vite.config.ts index.html ./
-COPY src/ ./src/
-COPY public/ ./public/
+COPY . ./
 
 # 构建参数 - API_KEY 在构建时注入
 ARG API_KEY=default
 
 # 安装依赖并构建前端
-RUN npm ci && \
-    API_KEY=$API_KEY npm run build
+RUN npm install && \
+  API_KEY=$API_KEY npm run build
 
 # --- 第二阶段 - 运行时环境 ---
 FROM node:20-alpine
 
 WORKDIR /app
 
-# 安装生产依赖
+# 安装生产依赖（如果存在 package-lock.json 则可改回 npm ci）
 COPY package.json package-lock.json* yarn.lock* ./
-RUN npm ci --only=production
+RUN npm install --only=production --no-audit --no-fund
 
-# 从 builder 阶段复制前端构建产物
+# 从 builder 阶段复制前端构建产物与后端运行时文件
 COPY --from=builder /app/dist ./dist
-
-# 复制后端代码
 COPY server.js ./
 COPY components/ ./components/
 COPY context/ ./context/

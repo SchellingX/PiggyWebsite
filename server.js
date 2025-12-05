@@ -133,6 +133,42 @@ app.get('/api/data', (req, res) => {
   }
 });
 
+// AI 代理端点：前端通过此端点发起 AI 查询，服务器端再调用 Gemini SDK（如果可用）
+app.post('/api/ai', async (req, res) => {
+  try {
+    const { query } = req.body || {};
+    if (!query || typeof query !== 'string') return res.status(400).json({ error: '无效的 query' });
+
+    const apiKey = process.env.API_KEY;
+    if (!apiKey || apiKey === 'default') {
+      return res.status(503).json({ error: 'AI 服务未配置' });
+    }
+
+    // 动态加载 SDK，防止在前端打包时被解析
+    let GoogleGenAI;
+    try {
+      GoogleGenAI = (await import('@google/genai')).GoogleGenAI;
+    } catch (e) {
+      console.error('无法加载 @google/genai:', e);
+      return res.status(503).json({ error: 'AI SDK 无法加载' });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: query,
+      config: {
+        systemInstruction: "你是一个热情、乐于助人且有礼貌的AI助手，服务于‘暖暖的猪窝’网站。请用简体中文回答，简洁明了。"
+      }
+    });
+
+    return res.json({ text: response.text || '' });
+  } catch (err) {
+    console.error('AI endpoint error:', err);
+    return res.status(500).json({ error: 'AI 请求失败' });
+  }
+});
+
 // 保存全站数据
 app.post('/api/data', (req, res) => {
   try {

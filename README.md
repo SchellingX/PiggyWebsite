@@ -18,106 +18,89 @@
 - **生产就绪**：完整的错误处理、安全验证和优雅关闭机制
 
 ---
+# 🐷 猪一家 (Pig Family Hub)
 
-## ✨ 核心功能
+一个面向家庭的轻量型门户：博客、相册、工具和 AI 助手的集合。
 
-### 1. 📝 家庭博客
-- **所见即所得**：支持 Markdown 语法，可直接插入图片。
-- **互动功能**：家庭成员可以点赞、收藏和评论文章。
-- **自动归档**：所有博客文章不仅保存在数据库中，还会自动生成 `.md` 文件归档到服务器后端，方便备份和二次阅读。
-- **草稿箱**：支持自动保存草稿，防止灵感丢失。
+此仓库包含前端（React + Vite）和后端（Express）的代码，并提供了 Docker + Docker Compose 配置用于一键部署。
 
-### 2. 📷 智能相册
-- **多媒体支持**：不仅支持照片，还支持视频播放（完美适配 iPhone Live Photo 导出的视频）。
-- **挂载导入**：支持从服务器本地目录 (`/media`) 直接挂载大量照片/视频，无需通过浏览器一一上传。
-- **大图浏览**：沉浸式 Lightbox 体验，支持点赞、评论和收藏回忆。
+**本次迭代的主要变更**
+- 将前端对 Google Gemini SDK 的直接依赖移至后端代理：前端现在调用 `/api/ai`，后端在运行时再动态加载 `@google/genai`（若配置了 `API_KEY`）。
+- 改进了 `server.js` 的错误处理、CORS 配置和静态文件安全检查。
+- 更新并现代化了 `docker-compose.yml`、`Dockerfile`，并提供示例 `.env`（本地测试）。
+- 修复了若干 TypeScript 空值访问问题，并在严格模式下通过构建。
 
-### 3. 🧠 AI 全能搜索
-- **双模引擎**：支持"站内搜索"（查找博客、照片、应用）和"AI 助手"（基于 Google Gemini 模型）。
-- **自然语言**：可以像和家人聊天一样询问 AI，获取食谱、讲故事或查询信息。
+## 快速开始（本地 - 使用 Docker Compose）
 
-### 4. 🛠 生活工具箱
-- **应用仪表盘**：快速访问家庭常用服务。
-- **提醒事项**：极简的待办事项清单，未完成的事项会自动同步到主页的"家庭公告栏"。
-
-### 5. 🔐 权限体系
-- **角色管理**：猪管（管理员）、普通成员、访客（猪迷）。
-- **精细控制**：管理员可调整主页布局、管理所有内容；普通成员可发布/编辑自己的内容；访客仅拥有只读权限。
-
----
-
-## 🛠 技术实现
-
-本项目采用了现代化的前后端分离架构（但在部署时合并为一个服务）：
-
-*   **前端**：React 18, TypeScript, Vite, Tailwind CSS (UI), Lucide React (图标)。
-*   **后端**：Node.js (Express)。负责托管静态资源、API 接口响应以及文件读写操作。
-*   **数据存储**：
-    *   核心数据：基于 JSON 的轻量级文件数据库 (`db.json`)。
-    *   博客归档：自动生成 Markdown 文件。
-    *   媒体文件：本地文件系统存储。
-*   **AI 服务**：集成 Google Gemini API (`gemini-3-pro-preview`)。
-*   **容器化**：Docker 多阶段构建 (Multi-stage Build)。
-
-### 项目结构
-
-```
-PiggyWebsite/
-├── components/              # React 组件库
-│   ├── Footer.tsx
-│   ├── HomeCarousel.tsx
-│   └── Navbar.tsx
-├── pages/                   # 页面组件
-│   ├── Home.tsx
-│   ├── Blog.tsx
-│   ├── Gallery.tsx
-│   ├── Apps.tsx
-│   ├── Search.tsx
-│   └── Login.tsx
-├── services/                # 业务逻辑服务
-│   └── geminiService.ts     # Gemini AI 集成
-├── context/                 # React Context
-│   └── DataContext.tsx      # 全局状态管理
-├── public/                  # 静态资源
-│   └── assets/
-├── server.js                # Express 后端服务器
-├── App.tsx                  # 主应用组件
-├── index.tsx                # React 应用入口
-├── types.ts                 # TypeScript 类型定义
-├── constants.ts             # 常量和初始数据
-├── vite.config.ts           # Vite 构建配置
-├── tsconfig.json            # TypeScript 配置
-├── package.json             # 项目依赖配置
-├── Dockerfile               # 容器镜像配置
-├── .gitignore               # Git 忽略文件
-└── README.md                # 项目文档
-```
-
----
-
-## 🚀 部署指南
-
-### 前置条件
-*   服务器安装了 Docker 和 Docker Compose。
-*   拥有一个 Google Gemini API Key。
-
-### 1. Docker 快速启动
-
-直接运行以下命令即可启动容器：
+1. 复制示例环境文件并修改：
 
 ```bash
-docker run -d \
-  --name pig-family-hub \
-  -p 8080:80 \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/media:/app/media \
-  -e API_KEY="your_google_gemini_api_key_here" \
-  pig-family-hub:latest
+cp .env.example .env
+# 编辑 .env，将 API_KEY 替换为你的 Google Gemini Key（若不使用 AI，可保留 default）
 ```
 
-**参数说明：**
-*   `-p 8080:80`: 将容器的 80 端口映射到主机的 8080 端口。
-*   `-v .../data:/app/data`: **重要**。持久化保存数据库和博客 Markdown 文件。
+2. 使用 Docker Compose 启动（推荐使用 Docker Compose v2，即 `docker compose`）：
+
+```bash
+docker compose up --build -d
+
+# 查看日志
+docker compose logs -f pig-family-hub
+
+# 停止并移除
+docker compose down
+```
+
+3. 访问应用：打开 `http://localhost:8080`。
+
+注意：本地 `.env` 包含敏感信息，请不要将它推送到远程仓库（仓库已在 `.gitignore` 中忽略 `.env`）。
+
+## AI 功能说明
+- 前端通过 `services/geminiService.ts` 调用后端代理 `POST /api/ai`。
+- 后端在运行时会尝试动态加载 `@google/genai` 并向 Gemini 发起请求（前提是运行环境已配置 `API_KEY` 并且包可用）。
+- 若未配置 `API_KEY` 或 SDK 无法加载，后端会返回友好提示，前端将展示“AI 未配置”的消息。
+
+示例请求（前端已封装，通常不需要手动调用）：
+
+```http
+POST /api/ai
+Content-Type: application/json
+
+{ "query": "帮我写一道晚餐食谱，适合一家四口" }
+```
+
+## 安全与运维建议
+- 强烈建议在生产环境使用 Secrets（Kubernetes secret / Docker secrets / CI secrets）来管理 `API_KEY`，不要直接在仓库中存放密钥。
+- 生产部署时使用反向代理（Nginx、Traefik）并配置 HTTPS（Let's Encrypt）。
+- 检查容器或宿主机上 `data/` 与 `media/` 目录的权限，确保只有信任用户可读写。
+
+## 开发与调试
+- 本地开发（不通过 Docker）：安装依赖并启动前端开发服务器
+
+```bash
+npm install
+npm run dev
+```
+
+- 后端本地运行：
+
+```bash
+node server.js
+```
+
+（在开发环境，`.env` 可设置 `NODE_ENV=development`。）
+
+## 已知事项与后续改进
+- `@google/genai` 被设为可选：如果需要在构建时打包 SDK，可将其恢复为常规依赖并确保版本可用。
+- 建议逐步强化 TypeScript 类型校验（当前已恢复 `strict: true`），并在 CI 中加入 lint 与 typecheck。
+- 可以在 CI 中添加自动构建并推送镜像到私有 Registry 的 workflow（需要密钥）。
+
+## 联系与贡献
+- 有修复或改进建议请发起 PR 或在 issue 中描述复现步骤与日志。
+
+---
+
+感谢使用 “猪一家”！如果你希望我把这些改动提交并推送到仓库（我将推送到 `main` 分支），我可以继续操作。 
 *   `-v .../media:/app/media`: **重要**。挂载本地媒体目录，放入此目录的照片/视频可在相册中通过"挂载导入"添加。
 *   `-e API_KEY`: 设置 Gemini API 密钥（必需）。
 
