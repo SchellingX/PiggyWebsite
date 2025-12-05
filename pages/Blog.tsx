@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { BlogPost } from '../types';
@@ -11,20 +10,21 @@ const Blog: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(false);
   
-  // 编辑器状态
+  // Editor state
   const [blogId, setBlogId] = useState<string>('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState<string>('');
   const [draftStatus, setDraftStatus] = useState<string>('');
   
-  // 评论状态
+  // Comment state
   const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contentImageInputRef = useRef<HTMLInputElement>(null);
 
-  // --- 草稿逻辑 ---
+  // --- Draft logic ---
   const getDraftKey = () => `blog_draft_${user.id}_${isEditingMode && blogId ? `edit_${blogId}` : 'new'}`;
 
   useEffect(() => {
@@ -55,7 +55,7 @@ const Blog: React.FC = () => {
     return () => clearTimeout(timer);
   }, [title, content, coverImage, isModalOpen]);
 
-  // --- 图片处理逻辑 ---
+  // --- Image handling ---
   const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -74,31 +74,38 @@ const Blog: React.FC = () => {
       }
   };
 
-  // --- 提交博客 ---
-  const handleCreateOrUpdate = (e: React.FormEvent) => {
+  // --- Blog submission ---
+  const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    setIsSubmitting(true);
+
     const excerpt = content.substring(0, 100).replace(/!\[.*?\]\(.*?\)/g, '[图片]') + '...';
     
-    if (isEditingMode && blogId) {
-       const original = blogs.find(b => b.id === blogId);
-       if (original) updateBlog({ ...original, title, content, excerpt, image: coverImage || original.image });
-    } else {
-        addBlog({
-          id: Date.now().toString(),
-          title,
-          content,
-          excerpt,
-          author: user,
-          date: new Date().toISOString(),
-          tags: ['家庭'],
-          likes: 0,
-          isCollected: false,
-          image: coverImage,
-          comments: []
-        });
+    try {
+      if (isEditingMode && blogId) {
+        const original = blogs.find(b => b.id === blogId);
+        if (original) {
+          await updateBlog({ ...original, title, content, excerpt, image: coverImage || original.image });
+        }
+      } else {
+          await addBlog({
+            title,
+            content,
+            excerpt,
+            author: user,
+            tags: ['家庭'],
+            isCollected: false,
+            image: coverImage,
+          });
+      }
+      localStorage.removeItem(getDraftKey());
+      closeModal();
+    } catch (error) {
+      console.error("Failed to submit blog:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    localStorage.removeItem(getDraftKey());
-    closeModal();
   };
 
   const openEditModal = (blog: BlogPost) => {
@@ -116,8 +123,8 @@ const Blog: React.FC = () => {
   
   const handleAddComment = (e: React.FormEvent) => {
       e.preventDefault();
-      if (!selectedBlog || !newComment.trim()) return;
-      commentBlog(selectedBlog.id, newComment);
+      if (!selectedBlog || !newComment.trim() || !user) return;
+      commentBlog(selectedBlog.id, user.name, newComment);
       setNewComment('');
   };
 
@@ -183,7 +190,7 @@ const Blog: React.FC = () => {
               </div>
             </div>
 
-            {/* 评论区 */}
+            {/* Comments Section */}
             <div className="bg-slate-50 rounded-2xl p-6">
                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><MessageSquare size={18}/> 评论 ({selectedBlog.comments.length})</h3>
                 <div className="space-y-4 mb-6">
@@ -238,7 +245,7 @@ const Blog: React.FC = () => {
         </div>
       )}
 
-      {/* 博客编辑/创建弹窗 (Keep existing implementation) */}
+      {/* Blog Editor Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in font-serif">
           <div className="bg-white rounded-3xl w-full max-w-3xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
@@ -280,7 +287,13 @@ const Blog: React.FC = () => {
               </div>
               <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 shrink-0">
                 <button type="button" onClick={closeModal} className="px-6 py-2.5 rounded-full text-slate-600 font-bold hover:bg-slate-100">取消</button>
-                <button type="submit" className="px-8 py-2.5 rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800 shadow-lg">{isEditingMode ? '更新发布' : '立即发布'}</button>
+                <button 
+                  type="submit" 
+                  className="px-8 py-2.5 rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800 shadow-lg disabled:opacity-70 disabled:cursor-wait"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (isEditingMode ? '正在更新...' : '正在发布...') : (isEditingMode ? '更新发布' : '立即发布')}
+                </button>
               </div>
             </form>
           </div>

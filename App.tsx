@@ -1,15 +1,15 @@
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { DataProvider, useData } from './context/DataContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './pages/Home';
-import Blog from './pages/Blog';
-import Gallery from './pages/Gallery';
-import Apps from './pages/Apps';
-import Search from './pages/Search';
-import Login from './pages/Login';
+
+// Lazy load pages for code splitting
+const Home = lazy(() => import('./pages/Home'));
+const Blog = lazy(() => import('./pages/Blog'));
+const Gallery = lazy(() => import('./pages/Gallery'));
+const Login = lazy(() => import('./pages/Login'));
 
 const MainLayout: React.FC = () => {
     const { user, siteTheme } = useData();
@@ -33,14 +33,14 @@ const MainLayout: React.FC = () => {
           <div className="relative z-10 flex flex-col min-h-screen">
             <Navbar />
             <main className={`flex-1 w-full ${location.pathname === '/' ? 'p-0 max-w-none' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24'}`}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/gallery" element={<Gallery />} />
-                <Route path="/apps" element={<Apps />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+              <Suspense fallback={<div className="text-center p-8">Loading page...</div>}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/gallery" element={<Gallery />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
             </main>
             <Footer />
           </div>
@@ -52,7 +52,9 @@ const App: React.FC = () => {
   return (
     <DataProvider>
       <Router>
-         <MainLayout />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FDFCFD] text-slate-900">Initializing Piggy Website...</div>}>
+          <MainLayout />
+        </Suspense>
       </Router>
     </DataProvider>
   );

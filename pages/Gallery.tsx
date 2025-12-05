@@ -23,22 +23,18 @@ const Gallery: React.FC = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && user) {
       const reader = new FileReader();
       reader.onloadend = () => {
          const isVideo = file.type.startsWith('video/');
          addPhoto({
-            id: Date.now().toString(),
             url: reader.result as string,
             caption: file.name.split('.')[0] || '新文件',
             category: '日常',
             date: new Date().toISOString().split('T')[0],
-            takenBy: user?.name ?? '匿名',
+            takenBy: user.name,
             source: 'local',
             mediaType: isVideo ? 'video' : 'image',
-            likes: 0,
-            isCollected: false,
-            comments: []
           });
           setIsUploading(false);
       };
@@ -48,19 +44,15 @@ const Gallery: React.FC = () => {
 
   const handleAddFromMount = (e: React.FormEvent) => {
       e.preventDefault();
-      if (!mountFileName) return;
+      if (!mountFileName || !user) return;
       addPhoto({
-          id: Date.now().toString(),
           url: `/media/${mountFileName}`,
           caption: mountFileName,
           category: mountCategory,
           date: new Date().toISOString().split('T')[0],
-          takenBy: user?.name ?? '匿名',
+          takenBy: user.name,
           source: 'mount',
           mediaType: isVideoFile(mountFileName) ? 'video' : 'image',
-          likes: 0,
-          isCollected: false,
-          comments: []
       });
       setIsUploading(false); setMountFileName('');
   };
@@ -70,8 +62,8 @@ const Gallery: React.FC = () => {
   
   const handleCommentSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      if (selectedPhotoIndex !== null && newComment.trim()) {
-          commentPhoto(filteredPhotos[selectedPhotoIndex].id, newComment);
+      if (selectedPhotoIndex !== null && newComment.trim() && user) {
+          commentPhoto(filteredPhotos[selectedPhotoIndex].id, user.name, newComment);
           setNewComment('');
       }
   };
@@ -114,7 +106,6 @@ const Gallery: React.FC = () => {
                 )}
                 {photo.source === 'mount' && <div className="absolute top-2 left-2 bg-blue-500/80 text-white p-1.5 rounded-full backdrop-blur-md z-10 shadow-sm" title="本地文件"><FolderOpen size={12} /></div>}
                 
-                {/* 悬停信息 */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5 z-10">
                     <p className="text-white font-bold truncate text-lg">{photo.caption}</p>
                     <div className="flex justify-between items-center mt-1">
@@ -129,13 +120,11 @@ const Gallery: React.FC = () => {
         ))}
       </div>
 
-      {/* Lightbox 全屏查看 */}
       {selectedPhotoIndex !== null && (
           <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center animate-fade-in" onClick={() => setSelectedPhotoIndex(null)}>
               <button className="absolute top-6 left-6 text-white/70 hover:text-white p-2 z-[60] transition-colors" onClick={() => setSelectedPhotoIndex(null)}><X size={36} /></button>
               
               <div className="w-full h-full flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
-                  {/* 左侧：媒体展示 */}
                   <div className="flex-1 relative flex items-center justify-center bg-black/20 h-[60vh] md:h-full">
                       <button className="absolute left-4 text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-full transition-all" onClick={handlePrev}><ChevronLeft size={48} /></button>
                       <button className="absolute right-4 text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-full transition-all" onClick={handleNext}><ChevronRight size={48} /></button>
@@ -149,7 +138,6 @@ const Gallery: React.FC = () => {
                       </div>
                   </div>
 
-                  {/* 右侧：互动栏 (评论与点赞) */}
                   <div className="w-full md:w-96 bg-white flex flex-col h-[40vh] md:h-full shrink-0 border-l border-slate-200">
                       <div className="p-6 border-b border-slate-100 bg-slate-50/50">
                           <h2 className="text-2xl font-bold text-slate-800 leading-tight mb-1">{filteredPhotos[selectedPhotoIndex].caption}</h2>
