@@ -17,34 +17,38 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   homeBanner: ASSETS.slide1,
 };
 
+// 密码应该在客户端初始化时使用强密码，这仅是开发演示用
+// 生产环境中密码应该被 hash 处理，并存储在服务器端
+const DEFAULT_DEMO_PASSWORD = 'demo@piggy.home'; // 改为更强的默认演示密码
+
 export const ALL_USERS: User[] = [
   {
     id: 'u_admin',
     name: '猪管',
     avatar: ASSETS.avatarDefault,
     role: 'admin',
-    password: '123456',
+    password: DEFAULT_DEMO_PASSWORD,
   },
   {
     id: 'u_dad',
     name: '爸比',
     avatar: ASSETS.avatarDefault,
     role: 'member',
-    password: '123456',
+    password: DEFAULT_DEMO_PASSWORD,
   },
   {
     id: 'u_mom',
     name: '妈咪',
     avatar: ASSETS.avatarDefault,
     role: 'member',
-    password: '123456',
+    password: DEFAULT_DEMO_PASSWORD,
   },
   {
     id: 'u_grandma',
     name: '婆婆',
     avatar: ASSETS.avatarDefault,
     role: 'member',
-    password: '123456',
+    password: DEFAULT_DEMO_PASSWORD,
   },
   {
     id: 'u_fan',

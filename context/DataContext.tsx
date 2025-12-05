@@ -109,13 +109,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const saveToBackend = async (data: any) => {
       try {
-          await fetch('/api/data', {
+          const response = await fetch('/api/data', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(data)
           });
+          
+          if (!response.ok) {
+              console.warn(`保存失败: ${response.status} ${response.statusText}`);
+          }
       } catch (error) {
           console.error("保存数据到后端失败", error);
+          // 不中断用户操作，只在控制台记录错误
       }
   };
 
