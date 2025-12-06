@@ -31,8 +31,8 @@ COPY --from=builder /app/dist ./dist
 COPY server.js .
 # Optional: Copy next.config.js if it existed (it doesn't, but safe to ignore)
 
-# Set ownership
-RUN chown -R nodejs:nodejs /app
+# Create uploads directory and set ownership
+RUN mkdir -p /app/uploads && chown -R nodejs:nodejs /app
 
 USER nodejs
 

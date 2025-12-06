@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { v4 as uuidv4 } from 'uuid';
+import multer from 'multer';
 
 // --- Basic Config ---
 
@@ -29,13 +30,36 @@ app.use(bodyParser.json({ limit: '50mb' }));
 // --- Paths & Init ---
 
 const DATA_DIR = path.join(__dirname, 'data');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 const DIST_DIR = path.join(__dirname, 'dist');
 
-// Ensure data directory exists
+// Ensure directories exist
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// --- Multer Configuration ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp|mp4|mov|webm/;
+    const extOk = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mimeOk = allowed.test(file.mimetype);
+    cb(null, extOk || mimeOk);
+  }
+});
 
 // --- DB Helper Functions ---
 
@@ -69,8 +93,7 @@ const readDb = () => {
   // Find or create admin user and ensure password is correct
   let adminUser = data.allUsers.find(u => u.role === 'admin' && u.id === 'u_admin');
   if (adminUser) {
-    // For demo purposes, reset password on every server start
-    adminUser.password = '123456';
+    // Password is preserved, not reset on each read
   } else {
     // If no admin, create one
     adminUser = {
@@ -106,8 +129,7 @@ const readDb = () => {
   familyMembers.forEach(member => {
     let user = data.allUsers.find(u => u.id === member.id);
     if (user) {
-      // Reset password for demo
-      user.password = '123456';
+      // Password is preserved for existing users
     } else {
       user = {
         ...member,
@@ -137,9 +159,21 @@ const writeDb = (data) => {
 
 // --- API Routes ---
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(UPLOADS_DIR));
+
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
+});
+
+// --- Upload API ---
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded or invalid file type.' });
+  }
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl, filename: req.file.filename });
 });
 
 // --- Auth API ---

@@ -58,22 +58,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [blogsData, photosData, remindersData, appsData, initialDb] = await Promise.all([
-          api.get('/api/blogs'),
-          api.get('/api/photos'),
-          api.get('/api/reminders'),
-          api.get('/api/apps'),
-          api.get('/api/data')
-        ]);
-        setBlogs(blogsData);
-        setPhotos(photosData);
-        setReminders(remindersData);
-        setApps(appsData);
-        if (initialDb) {
-            setAllUsers(initialDb.allUsers || []);
-            setHomeSections(initialDb.homeSections || []);
-            setSiteTheme(initialDb.siteTheme || DEFAULT_SITE_THEME);
-        }
+        // Optimized: Single API call instead of 5 parallel calls
+        const initialDb = await api.get('/api/data');
+        setBlogs(initialDb.blogs || []);
+        setPhotos(initialDb.photos || []);
+        setReminders(initialDb.reminders || []);
+        setApps(initialDb.apps || []);
+        setAllUsers(initialDb.allUsers || []);
+        setHomeSections(initialDb.homeSections || []);
+        setSiteTheme(initialDb.siteTheme || DEFAULT_SITE_THEME);
       } catch (error) {
         console.error("Failed to fetch initial data:", error);
       } finally {
@@ -112,41 +105,41 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (user?.id === userId) setUser(updatedUser);
   };
 
-  const addBlog = async (post: Omit<BlogPost, 'id' | 'date' | 'comments' | 'likes'|'isCollected'>) => {
-      const newBlog = await api.post('/api/blogs', post);
-      setBlogs(prev => [newBlog, ...prev]);
+  const addBlog = async (post: Omit<BlogPost, 'id' | 'date' | 'comments' | 'likes' | 'isCollected'>) => {
+    const newBlog = await api.post('/api/blogs', post);
+    setBlogs(prev => [newBlog, ...prev]);
   };
 
   const updateBlog = async (post: BlogPost) => {
-      const updatedBlog = await api.put(`/api/blogs/${post.id}`, post);
-      setBlogs(prev => prev.map(b => b.id === updatedBlog.id ? updatedBlog : b));
+    const updatedBlog = await api.put(`/api/blogs/${post.id}`, post);
+    setBlogs(prev => prev.map(b => b.id === updatedBlog.id ? updatedBlog : b));
   };
-  
+
   const deleteBlog = async (id: string) => {
-      await api.delete(`/api/blogs/${id}`);
-      setBlogs(prev => prev.filter(b => b.id !== id));
+    await api.delete(`/api/blogs/${id}`);
+    setBlogs(prev => prev.filter(b => b.id !== id));
   };
-  
+
   const likeBlog = async (id: string) => {
     setBlogs(prev => prev.map(b => b.id === id ? { ...b, likes: b.likes + 1 } : b));
     try { await api.post(`/api/blogs/${id}/like`, {}); }
     catch (error) { setBlogs(prev => prev.map(b => b.id === id ? { ...b, likes: b.likes - 1 } : b)); }
   };
-  
+
   const collectBlog = async (id: string) => {
     setBlogs(prev => prev.map(b => b.id === id ? { ...b, isCollected: !b.isCollected } : b));
     try { await api.post(`/api/blogs/${id}/collect`, {}); }
     catch (error) { setBlogs(prev => prev.map(b => b.id === id ? { ...b, isCollected: !b.isCollected } : b)); }
   };
-  
+
   const commentBlog = async (id: string, author: string, text: string) => {
-      const newComment = await api.post(`/api/blogs/${id}/comment`, { author, text });
-      setBlogs(prev => prev.map(b => b.id === id ? { ...b, comments: [...b.comments, newComment] } : b));
+    const newComment = await api.post(`/api/blogs/${id}/comment`, { author, text });
+    setBlogs(prev => prev.map(b => b.id === id ? { ...b, comments: [...b.comments, newComment] } : b));
   };
 
-  const addPhoto = async (photo: Omit<Photo, 'id'|'date'|'comments'|'likes'|'isCollected'>) => {
-      const newPhoto = await api.post('/api/photos', photo);
-      setPhotos(prev => [newPhoto, ...prev]);
+  const addPhoto = async (photo: Omit<Photo, 'id' | 'date' | 'comments' | 'likes' | 'isCollected'>) => {
+    const newPhoto = await api.post('/api/photos', photo);
+    setPhotos(prev => [newPhoto, ...prev]);
   };
 
   const likePhoto = async (id: string) => {
@@ -167,8 +160,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addReminder = async (text: string) => {
-      const newReminder = await api.post('/api/reminders', { text });
-      setReminders(prev => [...prev, newReminder]);
+    const newReminder = await api.post('/api/reminders', { text });
+    setReminders(prev => [...prev, newReminder]);
   };
 
   const toggleReminder = async (reminder: Reminder) => {
@@ -179,21 +172,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const deleteReminder = async (id: string) => {
-      await api.delete(`/api/reminders/${id}`);
-      setReminders(prev => prev.filter(r => r.id !== id));
+    await api.delete(`/api/reminders/${id}`);
+    setReminders(prev => prev.filter(r => r.id !== id));
   };
 
   const addApp = async (app: Omit<AppItem, 'id' | 'category' | 'description'>) => {
-      const newApp = await api.post('/api/apps', app);
-      setApps(prev => [...prev, newApp]);
+    const newApp = await api.post('/api/apps', app);
+    setApps(prev => [...prev, newApp]);
   };
-  
-    const updateSiteTheme = async (themeUpdate: Partial<SiteTheme>) => {
-        const originalTheme = { ...siteTheme };
-        setSiteTheme(prev => ({ ...prev, ...themeUpdate }));
-        try { await api.put('/api/theme', themeUpdate); }
-        catch (error) { setSiteTheme(originalTheme); }
-    };
+
+  const updateSiteTheme = async (themeUpdate: Partial<SiteTheme>) => {
+    const originalTheme = { ...siteTheme };
+    setSiteTheme(prev => ({ ...prev, ...themeUpdate }));
+    try { await api.put('/api/theme', themeUpdate); }
+    catch (error) { setSiteTheme(originalTheme); }
+  };
 
   const contextValue: DataContextType = {
     user, allUsers, blogs, photos, apps, reminders, homeSections, siteTheme, isLoading,

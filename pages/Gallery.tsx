@@ -21,23 +21,34 @@ const Gallery: React.FC = () => {
 
     const isVideoFile = (filename: string) => ['mp4', 'mov', 'webm', 'ogg', 'm4v'].includes(filename.split('.').pop()?.toLowerCase() || '');
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const [uploadProgress, setUploadProgress] = useState(false);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file && user) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const isVideo = file.type.startsWith('video/');
-                addPhoto({
-                    url: reader.result as string,
-                    caption: file.name.split('.')[0] || '新文件',
-                    category: '日常',
-                    takenBy: user.name,
-                    source: 'local',
-                    mediaType: isVideo ? 'video' : 'image',
-                });
-                setIsUploading(false);
-            };
-            reader.readAsDataURL(file);
+        if (!file || !user) return;
+
+        setUploadProgress(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            if (!res.ok) throw new Error('Upload failed');
+            const { url } = await res.json();
+
+            const isVideo = file.type.startsWith('video/');
+            await addPhoto({
+                url,
+                caption: file.name.split('.')[0] || '新文件',
+                category: '日常',
+                takenBy: user.name,
+                source: 'local',
+                mediaType: isVideo ? 'video' : 'image',
+            });
+            setIsUploading(false);
+        } catch (err) {
+            alert('上传失败，请重试');
+        } finally {
+            setUploadProgress(false);
         }
     };
 
