@@ -152,7 +152,7 @@ const Blog: React.FC = () => {
       </div>
 
       {selectedBlog ? (
-        <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl border border-white overflow-hidden animate-fade-in">
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/50 overflow-hidden animate-fade-in">
           <div className="relative h-64 md:h-96 w-full">
             <img src={selectedBlog.image} alt={selectedBlog.title} className="w-full h-full object-cover" />
             <div className="absolute top-4 right-4 flex gap-2">
@@ -217,7 +217,7 @@ const Blog: React.FC = () => {
       ) : (
         <div className="space-y-8">
           {blogs.map((blog) => (
-            <div key={blog.id} onClick={() => setSelectedBlog(blog)} className="bg-[#FFF9E6] backdrop-blur-sm rounded-2xl p-6 shadow-sm border-2 border-amber-100 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-100 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 relative">
+            <div key={blog.id} onClick={() => setSelectedBlog(blog)} className="bg-white/60 backdrop-blur-md rounded-2xl p-6 shadow-sm border-2 border-white/50 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-100 transition-all cursor-pointer group flex flex-col md:flex-row gap-6 relative">
               <div className="w-full md:w-56 h-56 shrink-0 rounded-xl overflow-hidden shadow-inner bg-white">
                 <img src={blog.image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               </div>

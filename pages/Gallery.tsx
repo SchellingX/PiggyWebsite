@@ -95,7 +95,7 @@ const Gallery: React.FC = () => {
 
             <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
                 {categories.map(cat => (
-                    <button key={cat} onClick={() => setFilter(cat)} className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${filter === cat ? 'bg-amber-400 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-amber-50'}`}>
+                    <button key={cat} onClick={() => setFilter(cat)} className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all backdrop-blur-md ${filter === cat ? 'bg-amber-400 text-white shadow-md' : 'bg-white/60 text-slate-800 hover:bg-white hover:shadow-sm'}`}>
                         {cat}
                     </button>
                 ))}
@@ -103,7 +103,7 @@ const Gallery: React.FC = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {filteredPhotos.map((photo, index) => (
-                    <div key={photo.id} onClick={() => setSelectedPhotoIndex(index)} className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-xl hover:shadow-amber-100 transition-all bg-slate-100 border-2 border-white">
+                    <div key={photo.id} onClick={() => setSelectedPhotoIndex(index)} className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-xl hover:shadow-amber-100 transition-all bg-white/20 border-2 border-white/50 backdrop-blur-sm">
                         {photo.mediaType === 'video' ? (
                             <div className="w-full h-full relative">
                                 <video src={photo.url} className="w-full h-full object-cover" preload="metadata" muted />
@@ -215,7 +215,7 @@ const Gallery: React.FC = () => {
                             <form onSubmit={handleAddFromMount} className="space-y-4">
                                 <div className="bg-blue-50 p-4 rounded-xl text-xs text-blue-800 flex items-start gap-2 font-medium">
                                     <FolderOpen size={16} className="shrink-0 mt-0.5" />
-                                    <div>请确保文件已存在于服务器的 <b>/media</b> 目录中。<br />Docker 挂载路径：/app/media</div>
+                                    <div>请确保文件已存在于服务器的神奇文件夹中。<br />猪管会自动识别它们！✨</div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-1">文件名 (含后缀)</label>

@@ -31,7 +31,7 @@ const Login: React.FC = () => {
     const handleGuestLogin = async () => {
         setIsLoggingIn(true);
         try {
-            await login('猪迷', '');
+            await login(); // No args trigger guest: true logic in DataContext
         } catch (err) {
             setError('访客登录时发生错误。');
         } finally {
@@ -41,8 +41,8 @@ const Login: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 font-serif relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url('${siteTheme.loginBg}')` }}>
-            {/* Background overlay */}
-            <div className="absolute inset-0 bg-amber-900/10 backdrop-blur-sm z-0"></div>
+            {/* Background overlay removed */}
+            {/* <div className="absolute inset-0 bg-amber-900/10 backdrop-blur-sm z-0"></div> */}
 
             <div className="bg-white/95 backdrop-blur-xl w-full max-w-md p-10 rounded-3xl shadow-2xl border border-white/60 relative z-10 animate-fade-in ring-1 ring-amber-100">
                 <div className="text-center mb-10">

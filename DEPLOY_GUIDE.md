@@ -4,6 +4,12 @@
 
 ---
 
+## Default Credentials
+
+- **Admin**: `admin` / `123456`
+- **Family**: `daddy`, `mommy`, `nanny` (No password required)
+- **Guest**: Click "我是猪迷" to enter without login.
+
 ## 🏗️ 1. 环境准备 (Prerequisites)
 
 确保您的服务器已安装以下软件：

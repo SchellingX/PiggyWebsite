@@ -55,6 +55,8 @@ export interface Reminder {
   id: string;
   text: string;
   completed: boolean;
+  date?: string;
+  source?: 'local' | 'cloud' | 'outlook' | 'apple';
 }
 
 export type SearchSource = 'local' | 'ai';
@@ -69,7 +71,7 @@ export interface SearchResult {
 
 export interface HomeSection {
   id: string;
-  type: 'carousel' | 'apps' | 'blogs' | 'notices'; 
+  type: 'carousel' | 'apps' | 'blogs' | 'notices';
   visible: boolean;
   title: string;
 }
@@ -78,4 +80,23 @@ export interface SiteTheme {
   mainBg: string;
   loginBg: string;
   homeBanner: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+  timestamp: string;
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserChatData {
+  userId: string;
+  sessions: ChatSession[];
 }

@@ -1,16 +1,19 @@
-
 import { AppItem, BlogPost, Photo, User, Reminder, SiteTheme } from './types';
 
 // Use local assets from public/assets folder
 // Use local assets from public/assets folder
-const ASSETS = {
-  avatarDefault: '/assets/avatar-default.jpg',
+export const ASSETS = {
+  avatarDefault: '/assets/avatar-guest.jpg', // Use guest avatar as generic default
   avatarGuest: '/assets/avatar-guest.jpg',
-  slide1: '/assets/slide1.jpg',
-  slide2: '/assets/slide2.jpg',
-  slide3: '/assets/slide3.jpg',
-  bgMain: '/assets/background.jpg',
-  bgLogin: '/assets/background.jpg',
+  avatarAdmin: '/assets/avatar-admin.jpg',
+  avatarDaddy: '/assets/avatar-daddy.jpeg',
+  avatarMommy: '/assets/avatar-mommy.jpeg',
+  avatarNanny: '/assets/avatar-nanny.jpeg',
+  slide1: '/assets/background-mainpage.jpeg',
+  slide2: '/assets/background-blog.jpg',
+  slide3: '/assets/background-photo.jpeg',
+  bgMain: '/assets/background-mainpage.jpeg',
+  bgLogin: '/assets/background-mainpage.jpeg',
 };
 
 export const DEFAULT_SITE_THEME: SiteTheme = {
@@ -19,35 +22,32 @@ export const DEFAULT_SITE_THEME: SiteTheme = {
   homeBanner: ASSETS.bgMain,
 };
 
-// 密码应该在客户端初始化时使用强密码，这仅是开发演示用
-// 生产环境中密码应该被 hash 处理，并存储在服务器端
-
 export const ALL_USERS: User[] = [
   {
     id: 'u_admin',
-    name: '猪管',
-    avatar: ASSETS.avatarDefault,
+    name: 'admin',
+    avatar: ASSETS.avatarAdmin,
     role: 'admin',
     password: '',
   },
   {
     id: 'u_dad',
-    name: '爸比',
-    avatar: ASSETS.avatarDefault,
+    name: 'daddy',
+    avatar: ASSETS.avatarDaddy,
     role: 'member',
     password: '',
   },
   {
     id: 'u_mom',
-    name: '妈咪',
-    avatar: ASSETS.avatarDefault,
+    name: 'mommy',
+    avatar: ASSETS.avatarMommy,
     role: 'member',
     password: '',
   },
   {
-    id: 'u_grandma',
-    name: '婆婆',
-    avatar: ASSETS.avatarDefault,
+    id: 'u_nanny',
+    name: 'nanny',
+    avatar: ASSETS.avatarNanny,
     role: 'member',
     password: '',
   },
@@ -56,7 +56,7 @@ export const ALL_USERS: User[] = [
     name: '猪迷',
     avatar: ASSETS.avatarGuest,
     role: 'guest',
-    password: '', // 访客无密码
+    password: '',
   }
 ];
 

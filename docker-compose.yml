@@ -4,9 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        # 从环境变量读取 API_KEY，构建时注入
-        API_KEY: ${API_KEY:-default}
 
     image: pig-family-hub:latest
     container_name: pig-family-hub
@@ -26,7 +23,7 @@ services:
 
     environment:
       PORT: ${PORT:-8080}
-      API_KEY: ${API_KEY}
+      API_KEY:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
       NODE_ENV: ${NODE_ENV:-production}
 

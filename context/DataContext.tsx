@@ -78,7 +78,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (name?: string, password?: string) => {
     try {
-      const body = password ? { name, password } : { guest: true };
+      // If name is provided, use it (even with empty password)
+      // Only use guest: true if explicit guest login is requested via name='猪迷' (or some other trigger) but here we use the argument.
+      // Actually, if we want to support "Guest" button which calls login('猪迷', ''), we need to be careful.
+      // The server expects `guest: true` for guest flow OR name+password.
+      // If I pass name='猪迷' and password='', it goes to normal flow. Server finds '猪迷', checks password ''. Matches.
+      // So I just need to correctly pass the body.
+
+      const body = (name && name !== 'guest_trigger') ? { name, password: password || '' } : { guest: true };
+      // Note: 'guest_trigger' is just a hypothetical flag, in reality UI calls login('猪迷', '') or handleGuestLogin calls login() with specific params.
+      // Let's look at how it was: 
+      // const body = password ? { name, password } : { guest: true };
+      // This was preventing empty password login.
+
       const loggedInUser = await api.post('/api/auth/login', body);
       setUser(loggedInUser);
       return true;
