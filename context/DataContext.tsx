@@ -19,7 +19,7 @@ interface DataContextType {
   homeSections: HomeSection[];
   siteTheme: SiteTheme;
   isLoading: boolean;
-  login: (name?: string, guest?: boolean) => Promise<boolean>;
+  login: (name?: string, password?: string) => Promise<boolean>;
   logout: () => void;
   addUser: (name: string, avatar: string) => Promise<void>;
   changePassword: (userId: string, newPassword: string) => Promise<void>;
@@ -83,9 +83,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchData();
   }, []);
 
-  const login = async (name?: string, guest?: boolean) => {
+  const login = async (name?: string, password?: string) => {
     try {
-      const body = guest ? { guest: true } : { name };
+      const body = password ? { name, password } : { guest: true };
       const loggedInUser = await api.post('/api/auth/login', body);
       setUser(loggedInUser);
       return true;

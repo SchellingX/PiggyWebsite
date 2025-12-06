@@ -41,9 +41,10 @@ if (!fs.existsSync(DATA_DIR)) {
 
 // Read the entire database
 const readDb = () => {
+  let data;
   if (!fs.existsSync(DB_FILE)) {
     // If DB doesn't exist, create it with a default structure
-    const defaultData = {
+    data = {
       allUsers: [],
       blogs: [],
       photos: [],
@@ -51,15 +52,76 @@ const readDb = () => {
       siteTheme: {},
       homeSections: []
     };
-    writeDb(defaultData);
-    return defaultData;
+  } else {
+    try {
+      data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    } catch (err) {
+      console.error("Failed to read or parse database, re-initializing:", err);
+      data = { allUsers: [], blogs: [], photos: [], reminders: [], siteTheme: {}, homeSections: [] };
+    }
   }
-  try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-  } catch (err) {
-    console.error("Failed to read database:", err);
-    return null;
+
+  // Ensure data has allUsers array
+  if (!data.allUsers) {
+    data.allUsers = [];
   }
+
+  // Find or create admin user and ensure password is correct
+  let adminUser = data.allUsers.find(u => u.role === 'admin' && u.id === 'u_admin');
+  if (adminUser) {
+    // For demo purposes, reset password on every server start
+    adminUser.password = '123456';
+  } else {
+    // If no admin, create one
+    adminUser = {
+      id: 'u_admin',
+      name: '猪管',
+      avatar: '/assets/avatar-default.jpg',
+      role: 'admin',
+      password: '123456',
+    };
+    data.allUsers.unshift(adminUser); // Add to the beginning
+  }
+
+  // Find or create guest user
+  let guestUser = data.allUsers.find(u => u.role === 'guest');
+  if (!guestUser) {
+    guestUser = {
+      id: 'u_guest',
+      name: '猪迷',
+      avatar: '/assets/avatar-guest.jpg',
+      role: 'guest',
+      password: '',
+    };
+    data.allUsers.push(guestUser);
+  }
+
+  // Ensure other family members exist
+  const familyMembers = [
+    { id: 'u_dad', name: '爸比', role: 'member' },
+    { id: 'u_mom', name: '妈咪', role: 'member' },
+    { id: 'u_grandma', name: '婆婆', role: 'member' }
+  ];
+
+  familyMembers.forEach(member => {
+    let user = data.allUsers.find(u => u.id === member.id);
+    if (user) {
+      // Reset password for demo
+      user.password = '123456';
+    } else {
+      user = {
+        ...member,
+        avatar: '/assets/avatar-default.jpg',
+        password: '123456'
+      };
+      data.allUsers.push(user);
+    }
+  });
+
+  // Save changes back to the file
+  writeDb(data);
+
+  return data;
 };
 
 // Write the entire database
@@ -82,7 +144,7 @@ app.get('/health', (req, res) => {
 
 // --- Auth API ---
 app.post('/api/auth/login', (req, res) => {
-  const { name, guest } = req.body;
+  const { name, password, guest } = req.body;
   const db = readDb();
   const users = db.allUsers || [];
 
@@ -95,69 +157,70 @@ app.post('/api/auth/login', (req, res) => {
     return res.status(404).json({ error: 'Guest user definition not found.' });
   }
 
-  if (!name) {
-    return res.status(400).json({ error: 'Username is required.' });
+  if (!name || !password) {
+    return res.status(400).json({ error: 'Username and password are required.' });
   }
 
   const user = users.find(u => u.name === name);
-  if (user) {
+
+  if (user && user.password === password) {
     const { password, ...userToReturn } = user;
     return res.json(userToReturn);
   }
 
-  res.status(401).json({ error: 'User not found.' });
+  res.status(401).json({ error: 'Invalid credentials.' });
 });
 
 // --- User Management API ---
 app.post('/api/users', (req, res) => {
-    const db = readDb();
-    const { name, avatar, password } = req.body;
-    if (!name) return res.status(400).json({ error: 'Name is required.' });
+  const db = readDb();
+  const { name, avatar, password } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name is required.' });
 
-    const newUser = {
-        id: `u_${uuidv4()}`,
-        name,
-        avatar: avatar || '/assets/avatar-default.png',
-        role: 'member',
-        password: password || '',
-    };
-    db.allUsers.push(newUser);
-    writeDb(db);
-    const { password: _p, ...userToReturn } = newUser;
-    res.status(201).json(userToReturn);
+  const newUser = {
+    id: `u_${uuidv4()}`,
+    name,
+    avatar: avatar || '/assets/avatar-default.png',
+    role: 'member',
+    password: password || '',
+  };
+  db.allUsers.push(newUser);
+  writeDb(db);
+  const { password: _p, ...userToReturn } = newUser;
+  res.status(201).json(userToReturn);
 });
 
 app.put('/api/users/:id/avatar', (req, res) => {
-    const { id } = req.params;
-    const { avatar } = req.body;
-    if (!avatar) return res.status(400).json({ error: 'Avatar URL is required.' });
-    
-    const db = readDb();
-    const user = db.allUsers.find(u => u.id === id);
-    if (user) {
-        user.avatar = avatar;
-        writeDb(db);
-        const { password, ...userToReturn } = user;
-        res.json(userToReturn);
-    } else {
-        res.status(404).json({ error: 'User not found.' });
-    }
+  const { id } = req.params;
+  const { avatar } = req.body;
+  if (!avatar) return res.status(400).json({ error: 'Avatar URL is required.' });
+
+  const db = readDb();
+  const user = db.allUsers.find(u => u.id === id);
+  if (user) {
+    user.avatar = avatar;
+    writeDb(db);
+    const { password, ...userToReturn } = user;
+    res.json(userToReturn);
+  } else {
+    res.status(404).json({ error: 'User not found.' });
+  }
 });
 
 app.put('/api/users/:id/password', (req, res) => {
-    const { id } = req.params;
-    const { newPassword } = req.body;
-    if (typeof newPassword !== 'string') return res.status(400).json({ error: 'New password is required.' });
+  const { id } = req.params;
+  const { newPassword } = req.body;
+  if (typeof newPassword !== 'string') return res.status(400).json({ error: 'New password is required.' });
 
-    const db = readDb();
-    const user = db.allUsers.find(u => u.id === id);
-    if (user) {
-        user.password = newPassword;
-        writeDb(db);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ error: 'User not found.' });
-    }
+  const db = readDb();
+  const user = db.allUsers.find(u => u.id === id);
+  if (user) {
+    user.password = newPassword;
+    writeDb(db);
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'User not found.' });
+  }
 });
 
 // --- Blogs API ---
@@ -197,173 +260,173 @@ app.delete('/api/blogs/:id', (req, res) => {
 });
 
 app.post('/api/blogs/:id/like', (req, res) => {
-    const { id } = req.params;
-    const db = readDb();
-    const blog = db.blogs.find(b => b.id === id);
-    if (blog) {
-        blog.likes = (blog.likes || 0) + 1;
-        writeDb(db);
-        res.json({ id: blog.id, likes: blog.likes });
-    } else {
-        res.status(404).json({ error: 'Blog not found.' });
-    }
+  const { id } = req.params;
+  const db = readDb();
+  const blog = db.blogs.find(b => b.id === id);
+  if (blog) {
+    blog.likes = (blog.likes || 0) + 1;
+    writeDb(db);
+    res.json({ id: blog.id, likes: blog.likes });
+  } else {
+    res.status(404).json({ error: 'Blog not found.' });
+  }
 });
 
 app.post('/api/blogs/:id/collect', (req, res) => {
-    const { id } = req.params;
-    const db = readDb();
-    const blog = db.blogs.find(b => b.id === id);
-    if (blog) {
-        blog.isCollected = !blog.isCollected;
-        writeDb(db);
-        res.json({ id: blog.id, isCollected: blog.isCollected });
-    } else {
-        res.status(404).json({ error: 'Blog not found.' });
-    }
+  const { id } = req.params;
+  const db = readDb();
+  const blog = db.blogs.find(b => b.id === id);
+  if (blog) {
+    blog.isCollected = !blog.isCollected;
+    writeDb(db);
+    res.json({ id: blog.id, isCollected: blog.isCollected });
+  } else {
+    res.status(404).json({ error: 'Blog not found.' });
+  }
 });
 
 app.post('/api/blogs/:id/comment', (req, res) => {
-    const { id } = req.params;
-    const { author, text } = req.body;
-    if (!author || !text) return res.status(400).json({ error: 'Author and text are required.' });
-    const db = readDb();
-    const blog = db.blogs.find(b => b.id === id);
-    if (blog) {
-        const newComment = { id: `c_${uuidv4()}`, author, text, date: new Date().toISOString() };
-        if (!blog.comments) blog.comments = [];
-        blog.comments.push(newComment);
-        writeDb(db);
-        res.status(201).json(newComment);
-    } else {
-        res.status(404).json({ error: 'Blog not found.' });
-    }
+  const { id } = req.params;
+  const { author, text } = req.body;
+  if (!author || !text) return res.status(400).json({ error: 'Author and text are required.' });
+  const db = readDb();
+  const blog = db.blogs.find(b => b.id === id);
+  if (blog) {
+    const newComment = { id: `c_${uuidv4()}`, author, text, date: new Date().toISOString() };
+    if (!blog.comments) blog.comments = [];
+    blog.comments.push(newComment);
+    writeDb(db);
+    res.status(201).json(newComment);
+  } else {
+    res.status(404).json({ error: 'Blog not found.' });
+  }
 });
 
 // --- Photos API ---
 app.get('/api/photos', (req, res) => {
-    const db = readDb();
-    res.json(db.photos || []);
+  const db = readDb();
+  res.json(db.photos || []);
 });
 
 app.post('/api/photos', (req, res) => {
-    const db = readDb();
-    const newPhoto = { ...req.body, id: uuidv4(), comments: [], likes: 0, isCollected: false, date: new Date().toISOString() };
-    db.photos.unshift(newPhoto);
-    writeDb(db);
-    res.status(201).json(newPhoto);
+  const db = readDb();
+  const newPhoto = { ...req.body, id: uuidv4(), comments: [], likes: 0, isCollected: false, date: new Date().toISOString() };
+  db.photos.unshift(newPhoto);
+  writeDb(db);
+  res.status(201).json(newPhoto);
 });
 
 app.post('/api/photos/:id/like', (req, res) => {
-    const { id } = req.params;
-    const db = readDb();
-    const photo = db.photos.find(p => p.id === id);
-    if (photo) {
-        photo.likes = (photo.likes || 0) + 1;
-        writeDb(db);
-        res.json({ id: photo.id, likes: photo.likes });
-    } else {
-        res.status(404).json({ error: 'Photo not found.' });
-    }
+  const { id } = req.params;
+  const db = readDb();
+  const photo = db.photos.find(p => p.id === id);
+  if (photo) {
+    photo.likes = (photo.likes || 0) + 1;
+    writeDb(db);
+    res.json({ id: photo.id, likes: photo.likes });
+  } else {
+    res.status(404).json({ error: 'Photo not found.' });
+  }
 });
 
 app.post('/api/photos/:id/collect', (req, res) => {
-    const { id } = req.params;
-    const db = readDb();
-    const photo = db.photos.find(p => p.id === id);
-    if (photo) {
-        photo.isCollected = !photo.isCollected;
-        writeDb(db);
-        res.json({ id: photo.id, isCollected: photo.isCollected });
-    } else {
-        res.status(404).json({ error: 'Photo not found.' });
-    }
+  const { id } = req.params;
+  const db = readDb();
+  const photo = db.photos.find(p => p.id === id);
+  if (photo) {
+    photo.isCollected = !photo.isCollected;
+    writeDb(db);
+    res.json({ id: photo.id, isCollected: photo.isCollected });
+  } else {
+    res.status(404).json({ error: 'Photo not found.' });
+  }
 });
 
 app.post('/api/photos/:id/comment', (req, res) => {
-    const { id } = req.params;
-    const { author, text } = req.body;
-    if (!author || !text) return res.status(400).json({ error: 'Author and text are required.' });
-    const db = readDb();
-    const photo = db.photos.find(p => p.id === id);
-    if (photo) {
-        const newComment = { id: `pc_${uuidv4()}`, author, text, date: new Date().toISOString() };
-        if (!photo.comments) photo.comments = [];
-        photo.comments.push(newComment);
-        writeDb(db);
-        res.status(201).json(newComment);
-    } else {
-        res.status(404).json({ error: 'Photo not found.' });
-    }
+  const { id } = req.params;
+  const { author, text } = req.body;
+  if (!author || !text) return res.status(400).json({ error: 'Author and text are required.' });
+  const db = readDb();
+  const photo = db.photos.find(p => p.id === id);
+  if (photo) {
+    const newComment = { id: `pc_${uuidv4()}`, author, text, date: new Date().toISOString() };
+    if (!photo.comments) photo.comments = [];
+    photo.comments.push(newComment);
+    writeDb(db);
+    res.status(201).json(newComment);
+  } else {
+    res.status(404).json({ error: 'Photo not found.' });
+  }
 });
 
 
 // --- Reminders API (Simplified) ---
 app.get('/api/reminders', (req, res) => {
-    const db = readDb();
-    res.json(db.reminders || []);
+  const db = readDb();
+  res.json(db.reminders || []);
 });
 
 app.post('/api/reminders', (req, res) => {
-    const db = readDb();
-    const newReminder = { ...req.body, id: uuidv4(), completed: false };
-    db.reminders.push(newReminder);
-    writeDb(db);
-    res.status(201).json(newReminder);
+  const db = readDb();
+  const newReminder = { ...req.body, id: uuidv4(), completed: false };
+  db.reminders.push(newReminder);
+  writeDb(db);
+  res.status(201).json(newReminder);
 });
 
 app.put('/api/reminders/:id', (req, res) => {
-    const { id } = req.params;
-    const { completed } = req.body;
-    const db = readDb();
-    const reminder = db.reminders.find(r => r.id === id);
+  const { id } = req.params;
+  const { completed } = req.body;
+  const db = readDb();
+  const reminder = db.reminders.find(r => r.id === id);
 
-    if (reminder) {
-        reminder.completed = completed;
-        writeDb(db);
-        res.json(reminder);
-    } else {
-        res.status(404).json({ error: 'Reminder not found.' });
-    }
+  if (reminder) {
+    reminder.completed = completed;
+    writeDb(db);
+    res.json(reminder);
+  } else {
+    res.status(404).json({ error: 'Reminder not found.' });
+  }
 });
 
 app.delete('/api/reminders/:id', (req, res) => {
-    const { id } = req.params;
-    const db = readDb();
-    db.reminders = db.reminders.filter(r => r.id !== id);
-    writeDb(db);
-    res.status(204).send();
+  const { id } = req.params;
+  const db = readDb();
+  db.reminders = db.reminders.filter(r => r.id !== id);
+  writeDb(db);
+  res.status(204).send();
 });
 
 // --- Apps API ---
 app.get('/api/apps', (req, res) => {
-    const db = readDb();
-    res.json(db.apps || []);
+  const db = readDb();
+  res.json(db.apps || []);
 });
 
 app.post('/api/apps', (req, res) => {
-    const db = readDb();
-    const { name, url, icon } = req.body;
-    if (!name || !url || !icon) {
-        return res.status(400).json({ error: 'Name, URL, and icon are required.' });
-    }
-    const newApp = { ...req.body, id: uuidv4(), category: 'custom', description: '' };
-    if (!db.apps) {
-      db.apps = [];
-    }
-    db.apps.push(newApp);
-    writeDb(db);
-    res.status(201).json(newApp);
+  const db = readDb();
+  const { name, url, icon } = req.body;
+  if (!name || !url || !icon) {
+    return res.status(400).json({ error: 'Name, URL, and icon are required.' });
+  }
+  const newApp = { ...req.body, id: uuidv4(), category: 'custom', description: '' };
+  if (!db.apps) {
+    db.apps = [];
+  }
+  db.apps.push(newApp);
+  writeDb(db);
+  res.status(201).json(newApp);
 });
 
 // --- Site Theme API ---
 app.put('/api/theme', (req, res) => {
-    const db = readDb();
-    if (!db) {
-        return res.status(500).json({ error: 'Database not available.' });
-    }
-    db.siteTheme = { ...db.siteTheme, ...req.body };
-    writeDb(db);
-    res.json(db.siteTheme);
+  const db = readDb();
+  if (!db) {
+    return res.status(500).json({ error: 'Database not available.' });
+  }
+  db.siteTheme = { ...db.siteTheme, ...req.body };
+  writeDb(db);
+  res.json(db.siteTheme);
 });
 
 
@@ -382,7 +445,7 @@ app.get('/api/data', (req, res) => {
 });
 
 app.post('/api/data', (req, res) => {
-    res.status(410).json({ error: "This endpoint is deprecated. Please use the new granular API endpoints." });
+  res.status(410).json({ error: "This endpoint is deprecated. Please use the new granular API endpoints." });
 });
 
 

@@ -2,19 +2,21 @@
 import { AppItem, BlogPost, Photo, User, Reminder, SiteTheme } from './types';
 
 // Use local assets from public/assets folder
+// Use local assets from public/assets folder
 const ASSETS = {
-  avatarDefault: '/assets/avatar-default.png',
+  avatarDefault: '/assets/avatar-default.jpg',
+  avatarGuest: '/assets/avatar-guest.jpg',
   slide1: '/assets/slide1.jpg',
   slide2: '/assets/slide2.jpg',
   slide3: '/assets/slide3.jpg',
-  bgMain: '/assets/bg-main.jpg',
-  bgLogin: '/assets/bg-login.jpg',
+  bgMain: '/assets/background.jpg',
+  bgLogin: '/assets/background.jpg',
 };
 
 export const DEFAULT_SITE_THEME: SiteTheme = {
   mainBg: ASSETS.bgMain,
   loginBg: ASSETS.bgLogin,
-  homeBanner: ASSETS.slide1,
+  homeBanner: ASSETS.bgMain,
 };
 
 // 密码应该在客户端初始化时使用强密码，这仅是开发演示用
@@ -52,7 +54,7 @@ export const ALL_USERS: User[] = [
   {
     id: 'u_fan',
     name: '猪迷',
-    avatar: ASSETS.avatarDefault,
+    avatar: ASSETS.avatarGuest,
     role: 'guest',
     password: '', // 访客无密码
   }
@@ -115,7 +117,7 @@ export const MOCK_PHOTOS: Photo[] = [
     likes: 10,
     isCollected: true,
     comments: [
-        { id: 'pc1', author: '圆圆', text: '好玩！', date: new Date().toISOString() }
+      { id: 'pc1', author: '圆圆', text: '好玩！', date: new Date().toISOString() }
     ]
   },
   {

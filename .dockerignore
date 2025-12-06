@@ -1,1 +1,7 @@
-��^�j�W�v+-���	���rG�~)^v�$z���jh��
+node_modules
+dist
+.git
+.DS_Store
+.env
+coverage
+build
