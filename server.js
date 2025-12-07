@@ -184,6 +184,12 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// --- Data Aggregation API ---
+app.get('/api/data', (req, res) => {
+  const db = readDb();
+  res.json(db);
+});
+
 // --- Upload API ---
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) {
@@ -368,20 +374,59 @@ app.get('/api/photos', (req, res) => {
 
 app.post('/api/photos', (req, res) => {
   const db = readDb();
-  const newPhoto = { ...req.body, id: uuidv4(), comments: [], likes: 0, isCollected: false, date: new Date().toISOString() };
+  const newPhoto = {
+    ...req.body,
+    id: uuidv4(),
+    comments: [],
+    likes: 0,
+    likedBy: [],
+    isCollected: false,
+    collectedBy: [],
+    date: new Date().toISOString()
+  };
   db.photos.unshift(newPhoto);
   writeDb(db);
   res.status(201).json(newPhoto);
 });
 
-app.post('/api/photos/:id/like', (req, res) => {
+app.put('/api/photos/:id', (req, res) => {
   const { id } = req.params;
+  const { caption, category } = req.body;
   const db = readDb();
   const photo = db.photos.find(p => p.id === id);
+
   if (photo) {
-    photo.likes = (photo.likes || 0) + 1;
+    if (caption !== undefined) photo.caption = caption;
+    if (category !== undefined) photo.category = category;
     writeDb(db);
-    res.json({ id: photo.id, likes: photo.likes });
+    res.json(photo);
+  } else {
+    res.status(404).json({ error: 'Photo not found.' });
+  }
+});
+
+app.post('/api/photos/:id/like', (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'UserId required' });
+
+  const db = readDb();
+  const photo = db.photos.find(p => p.id === id);
+
+  if (photo) {
+    if (!photo.likedBy) photo.likedBy = [];
+
+    // Check if double liking
+    const index = photo.likedBy.indexOf(userId);
+    if (index === -1) {
+      photo.likedBy.push(userId);
+    } else {
+      photo.likedBy.splice(index, 1);
+    }
+
+    photo.likes = photo.likedBy.length; // Sync legacy count
+    writeDb(db);
+    res.json({ id: photo.id, likes: photo.likes, likedBy: photo.likedBy });
   } else {
     res.status(404).json({ error: 'Photo not found.' });
   }
@@ -389,12 +434,27 @@ app.post('/api/photos/:id/like', (req, res) => {
 
 app.post('/api/photos/:id/collect', (req, res) => {
   const { id } = req.params;
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'UserId required' });
+
   const db = readDb();
   const photo = db.photos.find(p => p.id === id);
+
   if (photo) {
-    photo.isCollected = !photo.isCollected;
+    if (!photo.collectedBy) photo.collectedBy = [];
+
+    const index = photo.collectedBy.indexOf(userId);
+    if (index === -1) {
+      photo.collectedBy.push(userId);
+      photo.isCollected = true; // Legacy approximation (if ANYONE collects, true? mostly personal, but keeps type happy)
+      // Actually isCollected was per-user technically but db was global. 
+      // This legacy field is weird on a shared DB. Let's just update it loosely or ignore.
+    } else {
+      photo.collectedBy.splice(index, 1);
+    }
+
     writeDb(db);
-    res.json({ id: photo.id, isCollected: photo.isCollected });
+    res.json({ id: photo.id, collectedBy: photo.collectedBy });
   } else {
     res.status(404).json({ error: 'Photo not found.' });
   }
@@ -426,7 +486,8 @@ app.get('/api/reminders', (req, res) => {
 
 app.post('/api/reminders', (req, res) => {
   const db = readDb();
-  const newReminder = { ...req.body, id: uuidv4(), completed: false };
+  const { text, deadline } = req.body;
+  const newReminder = { ...req.body, id: uuidv4(), completed: false, deadline: deadline || null };
   db.reminders.push(newReminder);
   writeDb(db);
   res.status(201).json(newReminder);
@@ -739,13 +800,13 @@ app.post('/api/ai', async (req, res) => {
   if (!query) return res.status(400).json({ error: 'Query is required.' });
 
   const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey === 'default' || apiKey === 'your_api_key_here') {
-    return res.status(503).json({ error: 'AI Brain missing (API Key not configured).' });
+  if (!apiKey || apiKey === 'default') {
+    return res.status(503).json({ error: 'AI Brain missing (API Key not configured in .env).' });
   }
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
     const prompt = `你现在是“猪猪一家”网站的智慧伙伴，也是全家人的好朋友。
     设定：

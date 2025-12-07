@@ -7,8 +7,14 @@ export default defineConfig(({ mode }) => {
   // The third argument '' loads all env vars regardless of prefix (e.g. VITE_)
   // Using (process as any).cwd() to avoid TS error about missing property on Process type
   const env = loadEnv(mode, (process as any).cwd(), '');
-  
+
   return {
+    server: {
+      proxy: {
+        '/api': 'http://localhost:8080',
+        '/uploads': 'http://localhost:8080'
+      }
+    },
     plugins: [react()],
     define: {
       // Polyfill process.env.API_KEY for the frontend code

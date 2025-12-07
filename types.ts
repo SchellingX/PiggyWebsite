@@ -22,8 +22,10 @@ export interface BlogPost {
   author: User;
   date: string; // ISO string
   tags: string[];
-  likes: number;
-  isCollected: boolean;
+  likes: number; // Deprecated, keep for compat
+  likedBy?: string[]; // List of user IDs
+  isCollected: boolean; // Deprecated, keep for compat
+  collectedBy?: string[]; // List of user IDs
   image?: string;
   comments: Comment[];
 }
@@ -37,8 +39,10 @@ export interface Photo {
   takenBy: string;
   source?: 'local' | 'mount';
   mediaType?: 'image' | 'video';
-  likes: number;
-  isCollected: boolean;
+  likes: number; // Deprecated
+  likedBy?: string[]; // New
+  isCollected: boolean; // Deprecated
+  collectedBy?: string[]; // New
   comments: Comment[];
 }
 
@@ -56,6 +60,7 @@ export interface Reminder {
   text: string;
   completed: boolean;
   date?: string;
+  deadline?: string;
   source?: 'local' | 'cloud' | 'outlook' | 'apple';
 }
 

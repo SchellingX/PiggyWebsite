@@ -14,9 +14,13 @@
   - `GET /api/chat/:userId` - Get all sessions for a user
   - `GET /api/chat/:userId/:sessionId` - Get specific session
   - `POST /api/chat/:userId` - Create/update session with `sessionId` parameter
+  - `POST /api/chat/:userId` - Create/update session with `sessionId` parameter
   - `DELETE /api/chat/:userId?sessionId=X` - Delete specific or all sessions
+- **Photo Description Editing**: Users can now edit the description (caption) of photos after they are uploaded. Click the "Edit" icon in the photo detail view to modify.
 
 ### Fixed
+- **Gallery Interactions**: Ensured Like, Favorite, and Comment features are robustly handled in the frontend context.
+- **Backend API**: Added `PUT /api/photos/:id` to support photo updates.
 - **Modal Flickering**: Fixed animation flickering issues in all modals by:
   - Adding proper `scale-in`, `fade-in`, `fade-in-up` keyframes to Tailwind config
   - Using `forwards` animation fill mode to prevent state changes

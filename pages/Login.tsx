@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Lock, User, Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
     const { login, siteTheme } = useData();
+    const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -19,6 +21,8 @@ const Login: React.FC = () => {
             const success = await login(username, password);
             if (!success) {
                 setError('用户名或密码错误。');
+            } else {
+                navigate('/');
             }
         } catch (err) {
             setError('登录时发生错误。');
@@ -32,6 +36,7 @@ const Login: React.FC = () => {
         setIsLoggingIn(true);
         try {
             await login(); // No args trigger guest: true logic in DataContext
+            navigate('/');
         } catch (err) {
             setError('访客登录时发生错误。');
         } finally {

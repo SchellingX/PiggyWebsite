@@ -33,8 +33,9 @@ interface DataContextType {
   addPhoto: (photo: Omit<Photo, 'id' | 'date' | 'comments' | 'likes' | 'isCollected'>) => Promise<void>;
   likePhoto: (id: string) => Promise<void>;
   collectPhoto: (id: string) => Promise<void>;
+  updatePhoto: (id: string, updates: Partial<Photo>) => Promise<void>;
   commentPhoto: (id: string, author: string, text: string) => Promise<void>;
-  addReminder: (text: string) => Promise<void>;
+  addReminder: (text: string, deadline?: string) => Promise<void>;
   toggleReminder: (reminder: Reminder) => Promise<void>;
   deleteReminder: (id: string) => Promise<void>;
   addApp: (app: Omit<AppItem, 'id' | 'category' | 'description'>) => Promise<void>;
@@ -54,25 +55,26 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [siteTheme, setSiteTheme] = useState<SiteTheme>(DEFAULT_SITE_THEME);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      // Optimized: Single API call instead of 5 parallel calls
+      const initialDb = await api.get('/api/data');
+      setBlogs(initialDb.blogs || []);
+      setPhotos(initialDb.photos || []);
+      setReminders(initialDb.reminders || []);
+      setApps(initialDb.apps || []);
+      setAllUsers(initialDb.allUsers || []);
+      setHomeSections(initialDb.homeSections || []);
+      setSiteTheme(initialDb.siteTheme || DEFAULT_SITE_THEME);
+    } catch (error) {
+      console.error("Failed to fetch initial data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Optimized: Single API call instead of 5 parallel calls
-        const initialDb = await api.get('/api/data');
-        setBlogs(initialDb.blogs || []);
-        setPhotos(initialDb.photos || []);
-        setReminders(initialDb.reminders || []);
-        setApps(initialDb.apps || []);
-        setAllUsers(initialDb.allUsers || []);
-        setHomeSections(initialDb.homeSections || []);
-        setSiteTheme(initialDb.siteTheme || DEFAULT_SITE_THEME);
-      } catch (error) {
-        console.error("Failed to fetch initial data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
@@ -155,15 +157,44 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const likePhoto = async (id: string) => {
-    setPhotos(prev => prev.map(p => p.id === id ? { ...p, likes: p.likes + 1 } : p));
-    try { await api.post(`/api/photos/${id}/like`, {}); }
-    catch (error) { setPhotos(prev => prev.map(p => p.id === id ? { ...p, likes: p.likes - 1 } : p)); }
+    if (!user) return;
+    const userId = user.id;
+
+    // Optimistic Update
+    setPhotos(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const likedBy = p.likedBy || [];
+      const hasLiked = likedBy.includes(userId);
+      const newLikedBy = hasLiked ? likedBy.filter(uid => uid !== userId) : [...likedBy, userId];
+      return { ...p, likedBy: newLikedBy, likes: newLikedBy.length };
+    }));
+
+    try { await api.post(`/api/photos/${id}/like`, { userId }); }
+    catch (error) {
+      // Revert (Simplified revert for brevity, ideally redundant logic)
+      fetchData();
+    }
   };
 
   const collectPhoto = async (id: string) => {
-    setPhotos(prev => prev.map(p => p.id === id ? { ...p, isCollected: !p.isCollected } : p));
-    try { await api.post(`/api/photos/${id}/collect`, {}); }
-    catch (error) { setPhotos(prev => prev.map(p => p.id === id ? { ...p, isCollected: !p.isCollected } : p)); }
+    if (!user) return;
+    const userId = user.id;
+
+    setPhotos(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const collectedBy = p.collectedBy || [];
+      const hasCollected = collectedBy.includes(userId);
+      const newCollectedBy = hasCollected ? collectedBy.filter(uid => uid !== userId) : [...collectedBy, userId];
+      return { ...p, collectedBy: newCollectedBy };
+    }));
+
+    try { await api.post(`/api/photos/${id}/collect`, { userId }); }
+    catch (error) { fetchData(); }
+  };
+
+  const updatePhoto = async (id: string, updates: Partial<Photo>) => {
+    const updatedPhoto = await api.put(`/api/photos/${id}`, updates);
+    setPhotos(prev => prev.map(p => p.id === id ? { ...p, ...updatedPhoto } : p));
   };
 
   const commentPhoto = async (id: string, author: string, text: string) => {
@@ -171,8 +202,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setPhotos(prev => prev.map(p => p.id === id ? { ...p, comments: [...p.comments, newComment] } : p));
   };
 
-  const addReminder = async (text: string) => {
-    const newReminder = await api.post('/api/reminders', { text });
+  const addReminder = async (text: string, deadline?: string) => {
+    const newReminder = await api.post('/api/reminders', { text, deadline });
     setReminders(prev => [...prev, newReminder]);
   };
 
@@ -203,7 +234,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const contextValue: DataContextType = {
     user, allUsers, blogs, photos, apps, reminders, homeSections, siteTheme, isLoading,
     login, logout, addUser, changePassword, updateUserAvatar, addBlog, updateBlog, deleteBlog, likeBlog, collectBlog, commentBlog,
-    addPhoto, likePhoto, collectPhoto, commentPhoto,
+    addPhoto, likePhoto, collectPhoto, commentPhoto, updatePhoto,
     addReminder, toggleReminder, deleteReminder, addApp, updateSiteTheme,
   };
 

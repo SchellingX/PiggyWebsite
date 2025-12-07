@@ -9,6 +9,7 @@ const Reminders: React.FC = () => {
     // Filter State
     const [filter, setFilter] = useState<'all' | 'today' | 'scheduled'>('all');
     const [newTask, setNewTask] = useState('');
+    const [newDeadline, setNewDeadline] = useState('');
 
     // --- ACCESS CONTROL: GUEST GUARD ---
     if (user?.role === 'guest') {
@@ -43,8 +44,9 @@ const Reminders: React.FC = () => {
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
         if (newTask.trim()) {
-            addReminder(newTask);
+            addReminder(newTask, newDeadline);
             setNewTask('');
+            setNewDeadline('');
         }
     };
 
@@ -129,7 +131,14 @@ const Reminders: React.FC = () => {
                                 ></button>
                                 <div className="flex-1">
                                     <div className="text-slate-800 text-lg leading-snug">{r.text}</div>
-                                    {r.source === 'cloud' && <div className="text-xs text-blue-400 font-medium mt-1 flex items-center gap-1"><LucideIcons.Cloud size={10} /> Cloud Synced</div>}
+                                    <div className="flex items-center gap-3 mt-1">
+                                        {r.deadline && (
+                                            <div className="text-xs text-red-500 font-bold flex items-center gap-1 bg-red-50 px-2 py-0.5 rounded-md">
+                                                <LucideIcons.CalendarClock size={12} /> {r.deadline}
+                                            </div>
+                                        )}
+                                        {r.source === 'cloud' && <div className="text-xs text-blue-400 font-medium flex items-center gap-1"><LucideIcons.Cloud size={10} /> Cloud Synced</div>}
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -168,14 +177,23 @@ const Reminders: React.FC = () => {
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent">
-                    <form onSubmit={handleAdd}>
+                    <form onSubmit={handleAdd} className="bg-white border border-slate-200 shadow-xl rounded-2xl p-2 flex items-center gap-2">
                         <input
                             value={newTask}
                             onChange={e => setNewTask(e.target.value)}
                             type="text"
-                            placeholder="+ New Reminder"
-                            className="w-full text-lg font-medium bg-transparent border-none focus:ring-0 placeholder-slate-400"
+                            placeholder="Add a reminder..."
+                            className="flex-1 font-medium bg-transparent border-none focus:ring-0 placeholder-slate-400 text-slate-800"
                         />
+                        <input
+                            type="date"
+                            value={newDeadline}
+                            onChange={(e) => setNewDeadline(e.target.value)}
+                            className="bg-slate-100 border-none rounded-xl text-xs font-bold text-slate-500 px-3 py-2 cursor-pointer focus:ring-2 focus:ring-blue-100 outline-none"
+                        />
+                        <button type="submit" className="p-3 bg-blue-600 rounded-xl text-white shadow-blue-200 shadow-md hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!newTask.trim()}>
+                            <LucideIcons.Plus size={20} />
+                        </button>
                     </form>
                 </div>
             </div>

@@ -2,22 +2,27 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Photo } from '../types';
-import { Filter, Upload, X, ChevronLeft, ChevronRight, PlayCircle, FolderOpen, Video, Heart, Star, MessageSquare, Send } from 'lucide-react';
+import { Filter, Upload, X, ChevronLeft, ChevronRight, PlayCircle, FolderOpen, Video, Heart, Star, MessageSquare, Send, Edit3, Check, XCircle } from 'lucide-react';
 
 const Gallery: React.FC = () => {
-    const { photos, addPhoto, likePhoto, collectPhoto, commentPhoto, user } = useData();
+    const { photos, addPhoto, likePhoto, collectPhoto, commentPhoto, updatePhoto, user } = useData();
     if (!user) return <div className="pb-12">请先登录以查看相册。</div>;
     const [filter, setFilter] = useState<string>('全部');
-    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+    const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadTab, setUploadTab] = useState<'upload' | 'mount'>('upload');
     const [mountFileName, setMountFileName] = useState('');
+    const [uploadDescription, setUploadDescription] = useState('');
     const [mountCategory, setMountCategory] = useState('日常');
     const [newComment, setNewComment] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editDescription, setEditDescription] = useState('');
 
     const canUpload = user?.role === 'admin' || user?.role === 'member';
-    const categories = ['全部', '活动', '日常', '旅行', '有趣'];
-    const filteredPhotos = filter === '全部' ? photos : photos.filter(p => p.category === filter);
+    const categories = ['全部', '活动', '日常', '旅行', '有趣', '我的收藏'];
+    const filteredPhotos = filter === '全部' ? photos :
+        filter === '我的收藏' ? photos.filter(p => p.collectedBy?.includes(user?.id || '')) :
+            photos.filter(p => p.category === filter);
 
     const isVideoFile = (filename: string) => ['mp4', 'mov', 'webm', 'ogg', 'm4v'].includes(filename.split('.').pop()?.toLowerCase() || '');
 
@@ -38,13 +43,14 @@ const Gallery: React.FC = () => {
             const isVideo = file.type.startsWith('video/');
             await addPhoto({
                 url,
-                caption: file.name.split('.')[0] || '新文件',
+                caption: uploadDescription || file.name.split('.')[0] || '新文件',
                 category: '日常',
                 takenBy: user.name,
                 source: 'local',
                 mediaType: isVideo ? 'video' : 'image',
             });
             setIsUploading(false);
+            setUploadDescription('');
         } catch (err) {
             alert('上传失败，请重试');
         } finally {
@@ -66,15 +72,46 @@ const Gallery: React.FC = () => {
         setIsUploading(false); setMountFileName('');
     };
 
-    const handleNext = (e: React.MouseEvent) => { e.stopPropagation(); if (selectedPhotoIndex !== null) setSelectedPhotoIndex((selectedPhotoIndex + 1) % filteredPhotos.length); };
-    const handlePrev = (e: React.MouseEvent) => { e.stopPropagation(); if (selectedPhotoIndex !== null) setSelectedPhotoIndex((selectedPhotoIndex - 1 + filteredPhotos.length) % filteredPhotos.length); };
+    const handleNext = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (selectedPhotoId) {
+            const currentIndex = filteredPhotos.findIndex(p => p.id === selectedPhotoId);
+            if (currentIndex !== -1) {
+                const nextIndex = (currentIndex + 1) % filteredPhotos.length;
+                setSelectedPhotoId(filteredPhotos[nextIndex].id);
+            }
+        }
+    };
+
+    const handlePrev = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (selectedPhotoId) {
+            const currentIndex = filteredPhotos.findIndex(p => p.id === selectedPhotoId);
+            if (currentIndex !== -1) {
+                const prevIndex = (currentIndex - 1 + filteredPhotos.length) % filteredPhotos.length;
+                setSelectedPhotoId(filteredPhotos[prevIndex].id);
+            }
+        }
+    };
 
     const handleCommentSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (selectedPhotoIndex !== null && newComment.trim() && user) {
-            commentPhoto(filteredPhotos[selectedPhotoIndex].id, user.name, newComment);
+        if (selectedPhotoId && newComment.trim() && user) {
+            commentPhoto(selectedPhotoId, user.name, newComment);
             setNewComment('');
         }
+    };
+
+    const handleSaveDescription = async () => {
+        if (selectedPhotoId && editDescription.trim()) {
+            await updatePhoto(selectedPhotoId, { caption: editDescription });
+            setIsEditing(false);
+        }
+    };
+
+    const startEditing = (currentCaption: string) => {
+        setEditDescription(currentCaption);
+        setIsEditing(true);
     };
 
     return (
@@ -86,7 +123,7 @@ const Gallery: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     {canUpload && (
-                        <button onClick={() => setIsUploading(true)} className="bg-slate-900 text-white px-5 py-2.5 rounded-full flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg font-bold">
+                        <button onClick={() => { setIsUploading(true); setUploadDescription(''); }} className="bg-slate-900 text-white px-5 py-2.5 rounded-full flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg font-bold">
                             <Upload size={18} /> 添加回忆
                         </button>
                     )}
@@ -102,8 +139,8 @@ const Gallery: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                {filteredPhotos.map((photo, index) => (
-                    <div key={photo.id} onClick={() => setSelectedPhotoIndex(index)} className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-xl hover:shadow-amber-100 transition-all bg-white/20 border-2 border-white/50 backdrop-blur-sm">
+                {filteredPhotos.map((photo) => (
+                    <div key={photo.id} onClick={() => setSelectedPhotoId(photo.id)} className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-xl hover:shadow-amber-100 transition-all bg-white/20 border-2 border-white/50 backdrop-blur-sm">
                         {photo.mediaType === 'video' ? (
                             <div className="w-full h-full relative">
                                 <video src={photo.url} className="w-full h-full object-cover" preload="metadata" muted />
@@ -120,7 +157,7 @@ const Gallery: React.FC = () => {
                             <div className="flex justify-between items-center mt-1">
                                 <p className="text-white/80 text-xs font-medium">{photo.date}</p>
                                 <div className="flex items-center gap-2 text-white/90 text-xs">
-                                    <span className="flex items-center gap-1"><Heart size={12} className={photo.likes > 0 ? "fill-current" : ""} /> {photo.likes}</span>
+                                    <span className="flex items-center gap-1"><Heart size={12} className={(photo.likedBy || []).includes(user?.id || '') ? "fill-current text-rose-500" : ""} /> {photo.likes}</span>
                                     <span className="flex items-center gap-1"><MessageSquare size={12} /> {photo.comments.length}</span>
                                 </div>
                             </div>
@@ -129,68 +166,94 @@ const Gallery: React.FC = () => {
                 ))}
             </div>
 
-            {selectedPhotoIndex !== null && (
-                <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center animate-fade-in" onClick={() => setSelectedPhotoIndex(null)}>
-                    <button className="absolute top-6 left-6 text-white/70 hover:text-white p-2 z-[60] transition-colors" onClick={() => setSelectedPhotoIndex(null)}><X size={36} /></button>
+            {selectedPhotoId && (() => {
+                const selectedPhoto = filteredPhotos.find(p => p.id === selectedPhotoId);
+                if (!selectedPhoto) return null;
 
-                    <div className="w-full h-full flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex-1 relative flex items-center justify-center bg-black/20 h-[60vh] md:h-full">
-                            <button className="absolute left-4 text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-full transition-all" onClick={handlePrev}><ChevronLeft size={48} /></button>
-                            <button className="absolute right-4 text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-full transition-all" onClick={handleNext}><ChevronRight size={48} /></button>
+                return (
+                    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center animate-fade-in" onClick={() => { setSelectedPhotoId(null); setIsEditing(false); }}>
+                        <button className="absolute top-6 left-6 text-white/70 hover:text-white p-2 z-[60] transition-colors" onClick={() => { setSelectedPhotoId(null); setIsEditing(false); }}><X size={36} /></button>
 
-                            <div className="max-w-[90%] max-h-[90%]">
-                                {filteredPhotos[selectedPhotoIndex].mediaType === 'video' ? (
-                                    <video src={filteredPhotos[selectedPhotoIndex].url} controls autoPlay className="max-h-full max-w-full rounded-lg shadow-2xl">无法播放</video>
-                                ) : (
-                                    <img src={filteredPhotos[selectedPhotoIndex].url} alt={filteredPhotos[selectedPhotoIndex].caption} className="max-h-[85vh] max-w-full object-contain rounded-lg shadow-2xl" />
-                                )}
-                            </div>
-                        </div>
+                        <div className="w-full h-full flex flex-col md:flex-row" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex-1 relative flex items-center justify-center bg-black/20 h-[60vh] md:h-full">
+                                <button className="absolute left-4 text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-full transition-all" onClick={handlePrev}><ChevronLeft size={48} /></button>
+                                <button className="absolute right-4 text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-full transition-all" onClick={handleNext}><ChevronRight size={48} /></button>
 
-                        <div className="w-full md:w-96 bg-white flex flex-col h-[40vh] md:h-full shrink-0 border-l border-slate-200">
-                            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                                <h2 className="text-2xl font-bold text-slate-800 leading-tight mb-1">{filteredPhotos[selectedPhotoIndex].caption}</h2>
-                                <p className="text-slate-500 text-sm font-medium">{filteredPhotos[selectedPhotoIndex].date} • {filteredPhotos[selectedPhotoIndex].takenBy}</p>
-
-                                <div className="flex gap-3 mt-4">
-                                    <button onClick={() => likePhoto(filteredPhotos[selectedPhotoIndex].id)} className="flex-1 py-2 bg-rose-50 text-rose-500 rounded-xl font-bold text-sm hover:bg-rose-100 transition-colors flex items-center justify-center gap-2">
-                                        <Heart size={18} className={filteredPhotos[selectedPhotoIndex].likes > 0 ? "fill-current" : ""} /> {filteredPhotos[selectedPhotoIndex].likes}
-                                    </button>
-                                    <button onClick={() => collectPhoto(filteredPhotos[selectedPhotoIndex].id)} className={`flex-1 py-2 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 ${filteredPhotos[selectedPhotoIndex].isCollected ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                                        <Star size={18} className={filteredPhotos[selectedPhotoIndex].isCollected ? "fill-current" : ""} />
-                                    </button>
+                                <div className="max-w-[90%] max-h-[90%]">
+                                    {selectedPhoto.mediaType === 'video' ? (
+                                        <video src={selectedPhoto.url} controls autoPlay className="max-h-full max-w-full rounded-lg shadow-2xl">无法播放</video>
+                                    ) : (
+                                        <img src={selectedPhoto.url} alt={selectedPhoto.caption} className="max-h-[85vh] max-w-full object-contain rounded-lg shadow-2xl" />
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30">
-                                {filteredPhotos[selectedPhotoIndex].comments.length > 0 ? (
-                                    filteredPhotos[selectedPhotoIndex].comments.map(comment => (
-                                        <div key={comment.id} className="text-sm">
-                                            <div className="flex justify-between items-baseline mb-1">
-                                                <span className="font-bold text-slate-700">{comment.author}</span>
-                                                <span className="text-xs text-slate-400">{new Date(comment.date).toLocaleDateString()}</span>
-                                            </div>
-                                            <p className="text-slate-600 bg-white p-3 rounded-xl shadow-sm border border-slate-100">{comment.text}</p>
+                            <div className="w-full md:w-96 bg-white flex flex-col h-[40vh] md:h-full shrink-0 border-l border-slate-200">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                                    {isEditing ? (
+                                        <div className="flex gap-2 mb-2">
+                                            <input
+                                                type="text"
+                                                value={editDescription}
+                                                onChange={(e) => setEditDescription(e.target.value)}
+                                                className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-lg font-bold focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                                                autoFocus
+                                            />
+                                            <button onClick={handleSaveDescription} className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"><Check size={20} /></button>
+                                            <button onClick={() => setIsEditing(false)} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><XCircle size={20} /></button>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60">
-                                        <MessageSquare size={32} className="mb-2" />
-                                        <p className="text-sm">暂无评论，快来留言吧</p>
-                                    </div>
-                                )}
-                            </div>
+                                    ) : (
+                                        <div className="flex justify-between items-start gap-2 group/title">
+                                            <h2 className="text-2xl font-bold text-slate-800 leading-tight mb-1">{selectedPhoto.caption}</h2>
+                                            {canUpload && (
+                                                <button onClick={() => startEditing(selectedPhoto.caption)} className="opacity-0 group-hover/title:opacity-100 text-slate-400 hover:text-amber-500 transition-all p-1">
+                                                    <Edit3 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                    <p className="text-slate-500 text-sm font-medium">{selectedPhoto.date} • {selectedPhoto.takenBy}</p>
 
-                            <div className="p-4 border-t border-slate-100 bg-white">
-                                <form onSubmit={handleCommentSubmit} className="relative">
-                                    <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="添加评论..." className="w-full pl-4 pr-12 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-slate-50 focus:bg-white transition-all text-sm" />
-                                    <button type="submit" disabled={!newComment.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-amber-500 text-white rounded-lg disabled:opacity-50 hover:bg-amber-600"><Send size={16} /></button>
-                                </form>
+                                    <div className="flex gap-3 mt-4">
+                                        <button onClick={() => likePhoto(selectedPhoto.id)} className="flex-1 py-2 bg-rose-50 text-rose-500 rounded-xl font-bold text-sm hover:bg-rose-100 transition-colors flex items-center justify-center gap-2">
+                                            <Heart size={18} className={(selectedPhoto.likedBy || []).includes(user?.id || '') ? "fill-current" : ""} /> {selectedPhoto.likes}
+                                        </button>
+                                        <button onClick={() => collectPhoto(selectedPhoto.id)} className={`flex-1 py-2 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 ${(selectedPhoto.collectedBy || []).includes(user?.id || '') ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                                            <Star size={18} className={(selectedPhoto.collectedBy || []).includes(user?.id || '') ? "fill-current" : ""} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30">
+                                    {selectedPhoto.comments.length > 0 ? (
+                                        selectedPhoto.comments.map(comment => (
+                                            <div key={comment.id} className="text-sm">
+                                                <div className="flex justify-between items-baseline mb-1">
+                                                    <span className="font-bold text-slate-700">{comment.author}</span>
+                                                    <span className="text-xs text-slate-400">{new Date(comment.date).toLocaleDateString()}</span>
+                                                </div>
+                                                <p className="text-slate-600 bg-white p-3 rounded-xl shadow-sm border border-slate-100">{comment.text}</p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60">
+                                            <MessageSquare size={32} className="mb-2" />
+                                            <p className="text-sm">暂无评论，快来留言吧</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="p-4 border-t border-slate-100 bg-white">
+                                    <form onSubmit={handleCommentSubmit} className="relative">
+                                        <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="添加评论..." className="w-full pl-4 pr-12 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-slate-50 focus:bg-white transition-all text-sm" />
+                                        <button type="submit" disabled={!newComment.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-amber-500 text-white rounded-lg disabled:opacity-50 hover:bg-amber-600"><Send size={16} /></button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
             {isUploading && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in font-serif">
@@ -204,10 +267,16 @@ const Gallery: React.FC = () => {
                             <button onClick={() => setUploadTab('mount')} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${uploadTab === 'mount' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>挂载导入</button>
                         </div>
                         {uploadTab === 'upload' ? (
-                            <div className="text-center">
-                                <label className="block w-full h-48 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all group">
-                                    <Upload className="text-slate-400 group-hover:text-amber-500 mb-3 transition-colors" size={40} />
-                                    <span className="text-slate-500 text-base font-bold group-hover:text-amber-600">点击选择图片或视频</span>
+                            <div className="text-center space-y-4">
+                                <textarea
+                                    value={uploadDescription}
+                                    onChange={(e) => setUploadDescription(e.target.value)}
+                                    placeholder="描述一下这个瞬间... (可选)"
+                                    className="w-full h-24 p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none text-slate-700 placeholder:text-slate-400"
+                                />
+                                <label className="block w-full h-32 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all group">
+                                    <Upload className="text-slate-400 group-hover:text-amber-500 mb-2 transition-colors" size={32} />
+                                    <span className="text-slate-500 text-sm font-bold group-hover:text-amber-600">点击上传照片或视频</span>
                                     <input type="file" className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
                                 </label>
                             </div>
