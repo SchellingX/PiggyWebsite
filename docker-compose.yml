@@ -23,7 +23,7 @@ services:
 
     environment:
       PORT: ${PORT:-8080}
-      API_KEY: AIzaSyCt1RQjYuiTFG-D1_x62b69sHq0meX-2os
+      API_KEY: 
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
       NODE_ENV: ${NODE_ENV:-production}
 
